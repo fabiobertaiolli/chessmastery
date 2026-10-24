@@ -1,7 +1,7 @@
 node_modules
-dist
 dist-ssr
 *.local
+*.dmg
 src-tauri/target
 src-tauri/gen
 .DS_Store
