@@ -10,7 +10,10 @@ Este documento funciona como a memória de longo prazo do aplicativo **Chess Mas
 - **Regras de Xadrez**: `chess.js` + Motor Local de Avaliação Tática/Posicional (`src/lib/chess/localStockfishEngine.ts` e `dist/chess-engine.js`) otimizado para Macs Apple M2 com 8 GB de RAM (< 5 MB de consumo em memória).
 - **Ícone Oficial Personalizado**: Gerado em RGBA multi-resolução (`32x32`, `64x64`, `128x128`, `128x128@2x`, `icon.png`, `icon.icns`) em `src-tauri/icons/` e `public/app-icon.png`.
 - **Repositório Git**: `https://github.com/fabiobertaiolli/chessmastery.git` (branch `main`).
-- **Instalador Nativo macOS**: `Chess Mastery_1.0.0_aarch64.dmg` na raiz da pasta `/Volumes/Backup/antigravity01/Chess Mastery/`.
+- **Download Público na Nuvem (GitHub Releases v1.0.0)**:
+  - Link da Release: `https://github.com/fabiobertaiolli/chessmastery/releases/tag/v1.0.0`
+  - Download Direto do DMG: `https://github.com/fabiobertaiolli/chessmastery/releases/download/v1.0.0/Chess_Mastery_1.0.0_aarch64.dmg`
+- **Instalador Nativo macOS Local**: `Chess Mastery_1.0.0_aarch64.dmg` na raiz da pasta `/Volumes/Backup/antigravity01/Chess Mastery/`.
 - **Módulos Compartilhados (`shared/`)**:
   - `@shared/ui/chess/descriptiveNotation.js`: Conversor bidirecional de Notação Algébrica em Português (`Cf3`), Figurinos (`♘f3`), Internacional (`Nf3`) e Notação Descritiva Clássica em Português (`C3BR`, `P4R`) e Espanhol (`C3AR`, `P4R`).
   - `@shared/ui/chess/chessAudio.js`: Sintetizador acústico de peças de madeira via Web Audio API pura.
