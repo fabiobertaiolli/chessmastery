@@ -1,3 +1,8 @@
+/**
+ * Chess Mastery — Academia Interativa de Mestres
+ * Core Application Engine & Master UI Controller
+ * 100% Offline · Standalone Bundle para macOS WKWebView & Cocoa
+ */
 (function () {
   const {
     Chess,
@@ -9,10 +14,15 @@
   } = window.ChessMasteryEngine;
 
   const BOOKS = window.PREINSTALLED_BOOKS || [];
+  const OPENINGS = window.CHESS_OPENINGS || [];
+  const OPENING_CATS = window.OPENING_CATEGORIES || [];
+
   const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-  // Web Audio Synthesizer (@shared/ui/chess/chessAudio)
+  // ============================================================================
+  // WEB AUDIO ACOUSTIC SYNTHESIZER
+  // ============================================================================
   const audio = {
     ctx: null,
     muted: false,
@@ -118,7 +128,6 @@
       dark: '#b58863',
       lastLight: '#cdd26a',
       lastDark: '#aaa23a',
-      border: '#3d2e22',
     },
     chesscom_green: {
       name: 'Tournament Green',
@@ -126,7 +135,6 @@
       dark: '#769656',
       lastLight: '#f6f669',
       lastDark: '#baca2b',
-      border: '#26331b',
     },
     walnut_luxury: {
       name: 'Walnut Classic',
@@ -134,7 +142,6 @@
       dark: '#8b5a2b',
       lastLight: '#e4c96b',
       lastDark: '#a68232',
-      border: '#2c1b0e',
     },
     slate_ice: {
       name: 'Obsidian Slate',
@@ -142,7 +149,6 @@
       dark: '#78909c',
       lastLight: '#9be0c8',
       lastDark: '#55ab91',
-      border: '#1e293b',
     },
   };
 
@@ -169,7 +175,7 @@
     return `<svg viewBox="0 0 45 45" class="piece-svg">${innerBody}</svg>`;
   }
 
-  // Local Stockfish Lite Evaluation
+  // Stockfish Local Evaluation
   const PIECE_VALS = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
   function evaluateStatic(chess) {
     if (chess.isCheckmate()) return chess.turn() === 'w' ? -99999 : 99999;
@@ -197,23 +203,12 @@
     }
     let bestMove = moves[0];
     let bestScore = turn === 'w' ? -Infinity : Infinity;
-    for (const m of moves) {
+    for (const m of moves.slice(0, 15)) {
       const c1 = chess.clone();
       c1.move(m);
-      const replies = c1.moves({ verbose: true });
-      let replyScore = evaluateStatic(c1);
-      if (replies.length > 0) {
-        replyScore = turn === 'w' ? Infinity : -Infinity;
-        for (const r of replies.slice(0, 12)) {
-          const c2 = c1.clone();
-          c2.move(r);
-          const sc = evaluateStatic(c2);
-          if (turn === 'w' && sc < replyScore) replyScore = sc;
-          if (turn === 'b' && sc > replyScore) replyScore = sc;
-        }
-      }
-      if ((turn === 'w' && replyScore > bestScore) || (turn === 'b' && replyScore < bestScore)) {
-        bestScore = replyScore;
+      const sc = evaluateStatic(c1);
+      if ((turn === 'w' && sc > bestScore) || (turn === 'b' && sc < bestScore)) {
+        bestScore = sc;
         bestMove = m;
       }
     }
@@ -256,19 +251,39 @@
     };
   }
 
-  // Application State
+  // ============================================================================
+  // APPLICATION STATE
+  // ============================================================================
   const state = {
-    bookId: BOOKS[0].id,
-    chapterId: BOOKS[0].chapters[0].id,
-    gameId: BOOKS[0].chapters[0].games[0].id,
+    // Mode Switcher: 'library' (Livros) ou 'openings' (Aberturas & Defesas)
+    activeNavTab: 'library',
+
+    // Livros & Capítulos
+    bookId: BOOKS[0]?.id || 'xadrez-basico-agostini',
+    expandedBookIds: [BOOKS[0]?.id || 'xadrez-basico-agostini'],
+    isolatedChapterId: null, // null = visão geral de livros; string = modo isolado daquele capítulo
+    gameId: BOOKS[0]?.chapters[0]?.games[0]?.id || '',
+
+    // Aberturas & Defesas
+    selectedOpeningCat: 'open',
+    selectedOpeningId: OPENINGS[0]?.id || '',
+
+    // Modo ativo do estudo: 'book_game' ou 'opening'
+    currentStudyType: 'book_game',
+
+    // Painel direito: 'study' (Estudo & Comentários) ou 'movesheet' (Planilha) ou 'guess' (Adivinhe)
+    rightPanelTab: 'study',
+
+    // Preferências visuais
     notationMode: 'alg_pt', // 'alg_pt' | 'figurine' | 'desc_pt' | 'desc_es' | 'alg_en'
-    languageMode: 'bilingual', // 'pt' | 'bilingual' | 'original'
     boardTheme: 'lichess_wood',
     studyMode: 'study', // 'study' | 'guess' | 'explore'
     currentPly: 0,
     flipped: false,
     engineEnabled: false,
-    showLibraryModal: false,
+    searchQuery: '',
+
+    // Interações no tabuleiro
     selectedSquare: null,
     draggingFrom: null,
     userArrows: [],
@@ -277,43 +292,81 @@
     customFen: null,
     customHistory: [],
     customLastMove: null,
+
+    // Modo Adivinhe
     guessSolved: false,
     guessWrongMove: null,
     guessShowHint: false,
     guessStats: { correct: 0, attempts: 0, streak: 0 },
-    notesByGame: JSON.parse(localStorage.getItem('cm_notes_v1') || '{}'),
-    completedGames: JSON.parse(localStorage.getItem('cm_completed_v1') || '[]'),
+
+    // Persistência
+    completedGames: JSON.parse(localStorage.getItem('cm_completed_v2') || '[]'),
   };
 
+  // ============================================================================
+  // HELPERS DE CONSULTA
+  // ============================================================================
   function getActiveBook() {
     return BOOKS.find((b) => b.id === state.bookId) || BOOKS[0];
   }
+
   function getActiveChapter() {
     const b = getActiveBook();
-    return b.chapters.find((c) => c.id === state.chapterId) || b.chapters[0];
+    if (state.isolatedChapterId) {
+      const found = b.chapters.find((c) => c.id === state.isolatedChapterId);
+      if (found) return found;
+    }
+    return b.chapters[0];
   }
+
   function getActiveGame() {
     const c = getActiveChapter();
     return c.games.find((g) => g.id === state.gameId) || c.games[0];
   }
 
-  let cachedGameId = null;
+  function getActiveOpening() {
+    return OPENINGS.find((o) => o.id === state.selectedOpeningId) || OPENINGS[0];
+  }
+
+  let cachedStudyId = null;
   let cachedSteps = [];
   let cachedStartFen = '';
 
-  function getGameSteps() {
-    const gm = getActiveGame();
-    if (cachedGameId === gm.id) return { initialFen: cachedStartFen, steps: cachedSteps };
-    const startFen = gm.initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+  function getCurrentSteps() {
+    const studyKey = state.currentStudyType === 'opening'
+      ? `opening_${state.selectedOpeningId}`
+      : `game_${state.gameId}`;
+
+    if (cachedStudyId === studyKey) {
+      return { initialFen: cachedStartFen, steps: cachedSteps };
+    }
+
+    let rawMoves = [];
+    let annotations = {};
+    let startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+
+    if (state.currentStudyType === 'opening') {
+      const op = getActiveOpening();
+      rawMoves = op.movesSan || [];
+      annotations = op.annotations || {};
+      startFen = op.initialFen || startFen;
+    } else {
+      const gm = getActiveGame();
+      rawMoves = gm.movesSan || [];
+      annotations = gm.annotations || {};
+      startFen = gm.initialFen || startFen;
+    }
+
     const chess = new Chess(startFen);
     const steps = [];
-    gm.movesSan.forEach((san, idx) => {
+
+    rawMoves.forEach((san, idx) => {
       const ply = idx + 1;
       const fenBefore = chess.fen();
       const res = chess.move(san);
       if (!res) return;
       const fenAfter = chess.fen();
-      const ann = gm.annotations[ply];
+      const ann = annotations[ply];
       const badge = ann?.badge || '';
       const sanWithBadge = badge && !res.san.endsWith(badge) ? `${res.san}${badge}` : res.san;
       const payload = {
@@ -325,6 +378,7 @@
         captured: res.captured,
         promotion: res.promotion,
       };
+
       steps.push({
         ply,
         moveNumber: Math.floor(idx / 2) + 1,
@@ -344,19 +398,22 @@
         annotation: ann,
       });
     });
-    cachedGameId = gm.id;
+
+    cachedStudyId = studyKey;
     cachedSteps = steps;
     cachedStartFen = startFen;
     return { initialFen: startFen, steps };
   }
 
+  // ============================================================================
+  // NAVEGAÇÃO E AÇÕES
+  // ============================================================================
   function selectGame(bookId, chapterId, gameId) {
-    const b = BOOKS.find((x) => x.id === bookId) || BOOKS[0];
-    const c = b.chapters.find((x) => x.id === chapterId) || b.chapters[0];
-    const g = c.games.find((x) => x.id === gameId) || c.games[0];
-    state.bookId = b.id;
-    state.chapterId = c.id;
-    state.gameId = g.id;
+    state.currentStudyType = 'book_game';
+    state.activeNavTab = 'library';
+    state.bookId = bookId;
+    state.isolatedChapterId = chapterId;
+    state.gameId = gameId;
     state.currentPly = 0;
     state.customFen = null;
     state.customHistory = [];
@@ -364,16 +421,36 @@
     state.selectedSquare = null;
     state.userArrows = [];
     state.userHighlights = [];
-    state.flipped = g.heroColor === 'b';
+    const gm = getActiveGame();
+    state.flipped = gm.heroColor === 'b';
     state.guessSolved = false;
     state.guessWrongMove = null;
     state.guessShowHint = false;
-    state.showLibraryModal = false;
+    render();
+  }
+
+  function selectOpening(openingId) {
+    state.currentStudyType = 'opening';
+    state.activeNavTab = 'openings';
+    state.selectedOpeningId = openingId;
+    const op = getActiveOpening();
+    state.selectedOpeningCat = op.category;
+    state.currentPly = 0;
+    state.customFen = null;
+    state.customHistory = [];
+    state.customLastMove = null;
+    state.selectedSquare = null;
+    state.userArrows = [];
+    state.userHighlights = [];
+    state.flipped = op.heroColor === 'b';
+    state.guessSolved = false;
+    state.guessWrongMove = null;
+    state.guessShowHint = false;
     render();
   }
 
   function goToPly(ply) {
-    const { steps } = getGameSteps();
+    const { steps } = getCurrentSteps();
     const clamped = Math.max(0, Math.min(steps.length, ply));
     state.customFen = null;
     state.customHistory = [];
@@ -390,7 +467,7 @@
   }
 
   function handleUserMove(from, to) {
-    const { initialFen, steps } = getGameSteps();
+    const { initialFen, steps } = getCurrentSteps();
     const activeStep = state.currentPly > 0 ? steps[state.currentPly - 1] : null;
     const currentFen = state.customFen || (activeStep ? activeStep.fenAfter : initialFen);
     const chess = new Chess(currentFen);
@@ -458,6 +535,9 @@
     };
   }
 
+  // ============================================================================
+  // RENDER MASTER UI
+  // ============================================================================
   function render() {
     const root = document.getElementById('root');
     if (!root) return;
@@ -465,7 +545,10 @@
     const book = getActiveBook();
     const chapter = getActiveChapter();
     const game = getActiveGame();
-    const { initialFen, steps } = getGameSteps();
+    const opening = getActiveOpening();
+    const isOpeningMode = state.currentStudyType === 'opening';
+
+    const { initialFen, steps } = getCurrentSteps();
     const activeStep = state.currentPly > 0 ? steps[state.currentPly - 1] : null;
     const displayedFen = state.customFen || (activeStep ? activeStep.fenAfter : initialFen);
     const chess = new Chess(displayedFen);
@@ -521,7 +604,9 @@
         : []),
     ];
 
-    // Build 64 squares HTML
+    // ==========================================================================
+    // 1. SQUARES DO TABULEIRO (64 CASAS)
+    // ==========================================================================
     let squaresHtml = '';
     displayRows.forEach((rIdx, vRow) => {
       displayCols.forEach((cIdx, vCol) => {
@@ -563,13 +648,15 @@
                   : '<div class="legal-dot"></div>'
                 : ''
             }
-            ${badge ? `<div class="move-badge badge-${badge.replace(/\?/g, 'q').replace(/!/g, 'x')}">${badge}</div>` : ''}
+            ${badge ? `<div class="move-badge">${badge}</div>` : ''}
           </div>
         `;
       });
     });
 
-    // Build SVG Arrows
+    // ==========================================================================
+    // 2. SETAS SVG
+    // ==========================================================================
     let arrowsSvg = '';
     if (allArrows.length > 0) {
       const lines = allArrows
@@ -587,10 +674,10 @@
             ty = y2 - (dy / len) * 22;
           const colKey = a.color || 'emerald';
           const strokeMap = {
-            emerald: 'rgba(16,185,129,0.86)',
-            rose: 'rgba(244,63,94,0.86)',
-            amber: 'rgba(245,158,11,0.86)',
-            sky: 'rgba(14,165,233,0.9)',
+            emerald: 'rgba(16,185,129,0.88)',
+            rose: 'rgba(244,63,94,0.88)',
+            amber: 'rgba(245,158,11,0.88)',
+            sky: 'rgba(14,165,233,0.92)',
           };
           return `<line x1="${x1}" y1="${y1}" x2="${tx}" y2="${ty}" stroke="${strokeMap[colKey]}" stroke-width="18" stroke-linecap="round" marker-end="url(#arr-${colKey})"/>`;
         })
@@ -608,14 +695,39 @@
       `;
     }
 
-    const topP = state.flipped
-      ? { name: game.white, color: 'w', isTurn: turn === 'w', cap: mat.capByW, adv: mat.wAdv }
-      : { name: game.black, color: 'b', isTurn: turn === 'b', cap: mat.capByB, adv: mat.bAdv };
-    const botP = state.flipped
-      ? { name: game.black, color: 'b', isTurn: turn === 'b', cap: mat.capByB, adv: mat.bAdv }
-      : { name: game.white, color: 'w', isTurn: turn === 'w', cap: mat.capByW, adv: mat.wAdv };
+    // Players Info Banners
+    const topPlayerName = isOpeningMode
+      ? (state.flipped ? '⚪ Lado das Brancas' : '⚫ Resposta das Pretas')
+      : (state.flipped ? game.white : game.black);
+    const botPlayerName = isOpeningMode
+      ? (state.flipped ? '⚫ Resposta das Pretas' : '⚪ Lado das Brancas')
+      : (state.flipped ? game.black : game.white);
 
-    // Move Pairs Sheet
+    const topSubtitle = isOpeningMode
+      ? `${opening.eco} · ${opening.tag}`
+      : `${game.event} (${game.year})`;
+    const botSubtitle = isOpeningMode
+      ? `${opening.namePt}`
+      : `${game.openingNamePt || 'Abertura'} · ${game.result}`;
+
+    const topP = {
+      name: topPlayerName,
+      color: state.flipped ? 'w' : 'b',
+      isTurn: state.flipped ? turn === 'w' : turn === 'b',
+      sub: topSubtitle,
+      adv: state.flipped ? mat.wAdv : mat.bAdv,
+    };
+    const botP = {
+      name: botPlayerName,
+      color: state.flipped ? 'b' : 'w',
+      isTurn: state.flipped ? turn === 'b' : turn === 'w',
+      sub: botSubtitle,
+      adv: state.flipped ? mat.bAdv : mat.wAdv,
+    };
+
+    // ==========================================================================
+    // 3. PLANILHA DE LANCES (MOVESHEET)
+    // ==========================================================================
     let moveRowsHtml = '';
     for (let i = 0; i < steps.length; i += 2) {
       const w = steps[i];
@@ -639,48 +751,373 @@
               : '<span></span>'
           }
         </div>
-        ${
-          w?.annotation
-            ? `<div class="inline-comm" data-ply="${w.ply}"><strong>${mNum}. ${formatMoveByMode(w, state.notationMode)}:</strong> ${w.annotation.commentPt}</div>`
-            : ''
-        }
-        ${
-          b?.annotation
-            ? `<div class="inline-comm amber" data-ply="${b.ply}"><strong>${mNum}... ${formatMoveByMode(b, state.notationMode)}:</strong> ${b.annotation.commentPt}</div>`
-            : ''
-        }
       `;
     }
 
+    // ==========================================================================
+    // 4. CONSTRUÇÃO DA ABA LATERAL ESQUERDA (SIDEBAR)
+    // ==========================================================================
+    let sidebarContentHtml = '';
+
+    if (state.activeNavTab === 'library') {
+      // MODO BIBLIOTECA DE LIVROS
+      if (state.isolatedChapterId) {
+        // MODO ISOLADO DE CAPÍTULO (SOLICITAÇÃO EXPLÍCITA DO USUÁRIO)
+        const isoChap = getActiveChapter();
+        sidebarContentHtml = `
+          <div class="isolated-chapter-view">
+            <div class="isolated-back-bar">
+              <button id="btn-back-to-books" class="back-to-books-btn">
+                <span>← Voltar aos Capítulos</span>
+              </button>
+              <span class="breadcrumb-label">${book.titlePt.split(' (')[0]}</span>
+            </div>
+
+            <div class="isolated-chapter-hero">
+              <div class="isolated-eyebrow">
+                <span class="isolated-badge">Capítulo ${isoChap.number} Isolado</span>
+                <span class="isolated-games-count">${isoChap.games.length} Partidas</span>
+              </div>
+              <h2 class="isolated-title">${isoChap.titlePt}</h2>
+              <p class="isolated-sub">${isoChap.subtitlePt}</p>
+            </div>
+
+            <div class="isolated-games-list">
+              ${isoChap.games
+                .map(
+                  (gm) => `
+                <button class="game-card ${gm.id === game.id ? 'active' : ''}" data-sel-book="${book.id}" data-sel-chap="${isoChap.id}" data-sel-game="${gm.id}">
+                  <div class="gm-info">
+                    <div class="gm-title">${gm.titlePt}</div>
+                    <div class="gm-meta">${gm.white} vs. ${gm.black} (${gm.year})</div>
+                    <span class="gm-eco-tag">${gm.eco} · ${gm.openingNamePt || 'Partida Clássica'}</span>
+                  </div>
+                  ${state.completedGames.includes(gm.id) ? '<span class="done-indicator">✓</span>' : ''}
+                </button>`
+                )
+                .join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        // VISÃO GERAL COM ACORDEÃO DE LIVROS
+        const q = state.searchQuery.toLowerCase().trim();
+        const filteredBooks = BOOKS.filter((bk) => {
+          if (!q) return true;
+          return (
+            bk.titlePt.toLowerCase().includes(q) ||
+            bk.author.toLowerCase().includes(q) ||
+            bk.chapters.some(
+              (c) =>
+                c.titlePt.toLowerCase().includes(q) ||
+                c.games.some(
+                  (g) =>
+                    g.titlePt.toLowerCase().includes(q) ||
+                    g.white.toLowerCase().includes(q) ||
+                    g.black.toLowerCase().includes(q)
+                )
+            )
+          );
+        });
+
+        sidebarContentHtml = `
+          <div class="sidebar-scroll">
+            ${filteredBooks
+              .map((bk) => {
+                const isExpanded = state.expandedBookIds.includes(bk.id);
+                const isActive = bk.id === book.id;
+                return `
+                <div class="book-card ${isActive ? 'is-active-book' : ''}" data-book-id="${bk.id}">
+                  <div class="book-card-header" data-toggle-book="${bk.id}">
+                    <div class="book-header-info">
+                      <div class="book-icon-badge">📖</div>
+                      <div class="book-meta-text">
+                        <h3 class="book-title-h3">${bk.titlePt.split(' (')[0]}</h3>
+                        <p class="book-author-p">${bk.author} · ${bk.publicationYear}</p>
+                      </div>
+                    </div>
+                    <div class="book-header-side">
+                      <span class="book-chap-count">${bk.chapters.length} Cap.</span>
+                      <span class="chevron-arrow ${isExpanded ? 'open' : ''}">▼</span>
+                    </div>
+                  </div>
+
+                  ${
+                    isExpanded
+                      ? `<div class="book-chapters-drawer">
+                          ${bk.chapters
+                            .map(
+                              (ch) => `
+                            <button class="chapter-row-btn ${ch.id === chapter.id && isActive ? 'active' : ''}" data-isolate-chap="${ch.id}" data-parent-book="${bk.id}">
+                              <div class="chap-row-left">
+                                <div class="chap-row-num">Capítulo ${ch.number}</div>
+                                <div class="chap-row-title">${ch.titlePt}</div>
+                              </div>
+                              <span class="isolate-tag">Isolar ➔</span>
+                            </button>`
+                            )
+                            .join('')}
+                         </div>`
+                      : ''
+                  }
+                </div>`;
+              })
+              .join('')}
+          </div>
+        `;
+      }
+    } else {
+      // MODO ABERTURAS & DEFESAS (REPERTÓRIO E ESTUDOS)
+      const q = state.searchQuery.toLowerCase().trim();
+      sidebarContentHtml = `
+        <div class="sidebar-scroll">
+          ${OPENING_CATS.map((cat) => {
+            const catOpenings = OPENINGS.filter((o) => {
+              if (o.category !== cat.id) return false;
+              if (!q) return true;
+              return (
+                o.namePt.toLowerCase().includes(q) ||
+                o.eco.toLowerCase().includes(q) ||
+                o.tag.toLowerCase().includes(q)
+              );
+            });
+            if (catOpenings.length === 0) return '';
+            const isCatOpen = state.selectedOpeningCat === cat.id;
+
+            return `
+              <div class="opening-cat-block">
+                <div class="opening-cat-header" data-toggle-cat="${cat.id}">
+                  <div class="cat-title-wrap">
+                    <span class="cat-icon">${cat.icon}</span>
+                    <span class="cat-label">${cat.label}</span>
+                  </div>
+                  <div class="book-header-side">
+                    <span class="cat-count">${catOpenings.length} estudos</span>
+                    <span class="chevron-arrow ${isCatOpen ? 'open' : ''}">▼</span>
+                  </div>
+                </div>
+
+                ${
+                  isCatOpen
+                    ? `<div class="opening-items-drawer">
+                        ${catOpenings
+                          .map(
+                            (op) => `
+                          <button class="opening-item-btn ${op.id === opening.id && isOpeningMode ? 'active' : ''}" data-sel-opening="${op.id}">
+                            <div>
+                              <div class="op-name">${op.namePt}</div>
+                              <div class="op-tag">${op.tag}</div>
+                            </div>
+                            <span class="op-eco">${op.eco}</span>
+                          </button>`
+                          )
+                          .join('')}
+                       </div>`
+                    : ''
+                }
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // ==========================================================================
+    // 5. PAINEL DIREITO (ESTUDO, COMENTÁRIOS E AVALIAÇÃO)
+    // ==========================================================================
+    let rightPanelContentHtml = '';
+
+    if (state.rightPanelTab === 'movesheet') {
+      rightPanelContentHtml = `
+        <div class="movesheet-box">
+          <div class="movesheet-header">
+            <span># & LANCE BRANCAS</span>
+            <span>LANCE PRETAS</span>
+          </div>
+          <div class="movesheet-scroll">
+            ${moveRowsHtml}
+          </div>
+        </div>
+      `;
+    } else if (state.rightPanelTab === 'guess') {
+      rightPanelContentHtml = `
+        <div class="guess-container">
+          <div class="guess-header">
+            <div>
+              <div class="guess-badge">🎯 Adivinhe o Lance do Mestre</div>
+              <div class="guess-sub">Sem spoilers da planilha</div>
+            </div>
+          </div>
+          <div class="guess-stats-grid">
+            <div class="stat-box"><span>Acertos</span><strong>${state.guessStats.correct}</strong></div>
+            <div class="stat-box"><span>Tentativas</span><strong>${state.guessStats.attempts}</strong></div>
+            <div class="stat-box"><span>Sequência</span><strong>${state.guessStats.streak} 🔥</strong></div>
+          </div>
+          ${
+            state.guessSolved
+              ? `<div class="guess-solved-box">
+                  <div class="challenge-turn">Lance Correto Encontrado!</div>
+                  <p style="font-size:12.5px;color:#d4d4d8;">${activeStep?.annotation?.commentPt || 'Excelente lance!'}</p>
+                  <button class="primary-btn" id="btn-guess-next">Próximo Lance ➔</button>
+                 </div>`
+              : `<div class="guess-challenge-box">
+                  <div class="challenge-turn">Vez de: ${turn === 'w' ? 'Brancas' : 'Pretas'}</div>
+                  <p style="font-size:12px;color:#a1a1aa;">Mova uma peça no tabuleiro para acertar o lance.</p>
+                  ${state.guessWrongMove ? `<div class="wrong-alert">O lance <strong>${state.guessWrongMove}</strong> não foi o jogado. Tente novamente!</div>` : ''}
+                  ${state.guessShowHint && targetGuessStep?.annotation?.hintPt ? `<div class="hint-alert">💡 <strong>Dica:</strong> ${targetGuessStep.annotation.hintPt}</div>` : ''}
+                  <div class="guess-actions">
+                    <button class="primary-btn-sm" id="btn-guess-hint">💡 Dica</button>
+                    <button class="primary-btn-sm" id="btn-guess-reveal" style="background:#f43f5e;color:#fff;">Revelar</button>
+                  </div>
+                 </div>`
+          }
+        </div>
+      `;
+    } else {
+      // TAB: ESTUDO & COMENTÁRIOS DO LIVRO / TEORIA DA ABERTURA
+      if (isOpeningMode) {
+        rightPanelContentHtml = `
+          <div class="study-scroll-content">
+            <div class="opening-study-hero">
+              <div class="op-hero-header">
+                <span class="isolated-badge">${opening.eco} · ${opening.badgeText}</span>
+              </div>
+              <h2 class="op-hero-title">${opening.namePt}</h2>
+              <p class="op-hero-desc">${opening.introPt}</p>
+            </div>
+
+            <!-- ROSETTA STRIP (LANCE ATIVO) -->
+            ${
+              activeStep
+                ? `<div class="commentary-card">
+                    <div class="rosetta-strip">
+                      <span class="main-move-pill">${activeStep.moveNumber}. ${formatMoveByMode(activeStep, state.notationMode)}</span>
+                      <div class="rosetta-tags">
+                        <span>Figurino: <strong class="emerald-txt">${sanToFigurine(activeStep.san)}</strong></span>
+                        <span>Descritiva: <strong class="amber-txt">${activeStep.descriptivePt}</strong></span>
+                      </div>
+                    </div>
+                    <div class="comment-body">
+                      <p>${activeStep.annotation?.commentPt || 'Lance posicional crucial de abertura.'}</p>
+                    </div>
+                   </div>`
+                : ''
+            }
+
+            <!-- PLANOS ESTRATÉGICOS CENTRAIS -->
+            <div class="strategic-box">
+              <div class="strat-title" style="color:#f8fafc;">⚪ Planos Estratégicos das Brancas</div>
+              <div class="strat-list">
+                ${opening.plansWhite.map((p) => `<div class="strat-item w">${p}</div>`).join('')}
+              </div>
+            </div>
+
+            <div class="strategic-box">
+              <div class="strat-title" style="color:#7dd3fc;">⚫ Planos & Defesas das Pretas</div>
+              <div class="strat-list">
+                ${opening.plansBlack.map((p) => `<div class="strat-item b">${p}</div>`).join('')}
+              </div>
+            </div>
+
+            <div class="strategic-box">
+              <div class="strat-title" style="color:#fcd34d;">♙ Estrutura de Peões & Casas Críticas</div>
+              <p class="strat-item pawn">${opening.pawnStructure}</p>
+            </div>
+
+            <div class="strategic-box">
+              <div class="strat-title" style="color:#fca5a5;">⚠️ Armadilhas & Erros Típicos</div>
+              <p class="strat-item trap">${opening.trapsPt}</p>
+            </div>
+
+            ${
+              opening.relatedBookGameId
+                ? `<div class="related-game-banner">
+                    <div>
+                      <div class="rel-title">Partida Modelo no Livro</div>
+                      <div class="rel-sub">Estude esta abertura aplicada por Mestres Clássicos</div>
+                    </div>
+                    <button class="rel-btn" data-jump-game="${opening.relatedBookGameId}">Ver Partida</button>
+                   </div>`
+                : ''
+            }
+          </div>
+        `;
+      } else {
+        // MODO LIVROS CLÁSSICOS
+        rightPanelContentHtml = `
+          <div class="study-scroll-content">
+            <div class="commentary-card">
+              <div class="rosetta-strip">
+                <span class="main-move-pill">
+                  ${activeStep ? `${activeStep.moveNumber}. ${formatMoveByMode(activeStep, state.notationMode)}` : 'Posição Inicial'}
+                </span>
+                ${
+                  activeStep
+                    ? `<div class="rosetta-tags">
+                        <span>Figurino: <strong class="emerald-txt">${sanToFigurine(activeStep.san)}</strong></span>
+                        <span>Descritiva PT: <strong class="amber-txt">${activeStep.descriptivePt}</strong></span>
+                       </div>`
+                    : `<span style="font-size:11px;color:#a1a1aa;">${game.openingNamePt || 'Abertura Clássica'}</span>`
+                }
+              </div>
+
+              <div class="comment-body">
+                ${
+                  activeStep?.annotation
+                    ? `<p>${activeStep.annotation.commentPt}</p>`
+                    : `<p>${game.introPt}</p>`
+                }
+              </div>
+            </div>
+
+            <div class="strategic-box">
+              <div class="strat-title" style="color:#6ee7b7;">🎯 Razões Pedagógicas & Lições do Mestre</div>
+              <div class="strat-list">
+                ${(game.keyTakeawaysPt || []).map((t) => `<div class="strat-item w">${t}</div>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================================================
+    // 6. MONTAGEM DO HTML COMPLETO
+    // ==========================================================================
     root.innerHTML = `
       <div class="app-shell">
-        <!-- HEADER -->
+        <!-- TOP BAR -->
         <header class="top-bar">
           <div class="brand-group">
-            <button id="btn-open-library" class="brand-btn">
+            <div class="brand-btn" id="btn-brand-home">
               <img src="app-icon.png" alt="Chess Mastery" class="brand-icon"/>
               <div>
                 <div class="brand-title">Chess Mastery</div>
-                <div class="brand-sub">Biblioteca (${BOOKS.length} Clássicos Pré-Instalados)</div>
+                <div class="brand-sub">Academia Interativa de Mestres</div>
               </div>
-            </button>
-            <div class="book-pills">
-              ${BOOKS.map(
-                (bk) => `
-                <button class="book-pill ${bk.id === book.id ? 'active' : ''}" data-book="${bk.id}">
-                  ${bk.titlePt.split(' (')[0].split(',')[0]}
-                </button>`
-              ).join('')}
             </div>
+
+            <!-- NAVEGAÇÃO SUPERIOR PRINCIPAL -->
+            <nav class="view-switcher">
+              <button class="view-tab ${state.activeNavTab === 'library' ? 'active' : ''}" id="top-nav-library">
+                <span>📚 Livros Mestres</span>
+                <span class="tab-badge">${BOOKS.length}</span>
+              </button>
+              <button class="view-tab ${state.activeNavTab === 'openings' ? 'active' : ''}" id="top-nav-openings">
+                <span>♟️ Aberturas & Defesas</span>
+                <span class="tab-badge">${OPENINGS.length}</span>
+              </button>
+            </nav>
           </div>
 
+          <!-- CONTROLES GLOBAIS DE NOTAÇÃO & MODO -->
           <div class="controls-group">
             <div class="seg-group">
               ${[
-                { id: 'alg_pt', label: 'Algébrica PT (Cf3)' },
-                { id: 'figurine', label: 'Figurino (♘f3)' },
+                { id: 'alg_pt', label: 'Algébrica PT' },
+                { id: 'figurine', label: 'Figurino (♘)' },
                 { id: 'desc_pt', label: 'Descritiva (C3BR)' },
-                { id: 'desc_es', label: 'Descritiva ES (C3AR)' },
+                { id: 'desc_es', label: 'Descritiva ES' },
                 { id: 'alg_en', label: 'SAN (Nf3)' },
               ]
                 .map(
@@ -692,115 +1129,94 @@
                 .join('')}
             </div>
 
-            ${
-              book.originalLanguage !== 'pt'
-                ? `<div class="seg-group">
-                    ${[
-                      { id: 'pt', label: 'PT-BR' },
-                      { id: 'bilingual', label: 'Bilíngue' },
-                      { id: 'original', label: book.originalLanguage.toUpperCase() },
-                    ]
-                      .map(
-                        (l) => `
-                      <button class="seg-btn ${state.languageMode === l.id ? 'active' : ''}" data-lang="${l.id}">
-                        ${l.label}
-                      </button>`
-                      )
-                      .join('')}
-                   </div>`
-                : ''
-            }
-
             <div class="seg-group">
               <button class="seg-btn ${state.studyMode !== 'guess' ? 'active-emerald' : ''}" id="btn-mode-study">
                 📖 Leitura
               </button>
               <button class="seg-btn ${state.studyMode === 'guess' ? 'active-amber' : ''}" id="btn-mode-guess">
-                🎯 Modo Adivinhe
+                🎯 Adivinhe
               </button>
             </div>
           </div>
         </header>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- CORPO PRINCIPAL EM 3 COLUNAS -->
         <main class="main-grid">
-          <!-- LEFT SIDEBAR: Chapters & Games -->
+          <!-- COLUNA ESQUERDA: NAVEGAÇÃO DE LIVROS / ABERTURAS -->
           <aside class="sidebar-panel">
-            <div class="book-header-card">
-              <div class="book-badge-row">
-                <span class="badge-pill">${book.badgeText}</span>
-                <span class="year-label">${book.publicationYear}</span>
+            <div class="sidebar-header">
+              <div class="sidebar-mode-nav">
+                <button class="sidebar-mode-btn ${state.activeNavTab === 'library' ? 'active' : ''}" id="side-tab-lib">
+                  📚 Livros da Biblioteca
+                </button>
+                <button class="sidebar-mode-btn ${state.activeNavTab === 'openings' ? 'active' : ''}" id="side-tab-ops">
+                  ♟️ Aberturas & Defesas
+                </button>
               </div>
-              <h2>${book.titlePt}</h2>
-              <p>${book.author}</p>
+
+              <div class="sidebar-search-box">
+                <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  class="sidebar-search-input"
+                  id="sidebar-search"
+                  placeholder="${state.activeNavTab === 'library' ? 'Buscar livros, capítulos ou mestres...' : 'Buscar abertura por nome ou ECO...'}"
+                  value="${state.searchQuery}"
+                />
+              </div>
             </div>
 
-            <div class="chapters-scroll">
-              ${book.chapters
-                .map(
-                  (ch) => `
-                <div class="chapter-block">
-                  <div class="chap-eyebrow">Capítulo ${ch.number}</div>
-                  <div class="chap-title">${ch.titlePt}</div>
-                  <div class="chap-games">
-                    ${ch.games
-                      .map(
-                        (gm) => `
-                      <button class="game-item ${gm.id === game.id ? 'active' : ''}" data-sel-book="${book.id}" data-sel-chap="${ch.id}" data-sel-game="${gm.id}">
-                        <div>
-                          <div class="gm-title">${gm.titlePt}</div>
-                          <div class="gm-meta">${gm.white} vs. ${gm.black} (${gm.year})</div>
-                        </div>
-                        ${state.completedGames.includes(gm.id) ? '<span class="done-badge">✓</span>' : ''}
-                      </button>`
-                      )
-                      .join('')}
-                  </div>
-                </div>`
-                )
-                .join('')}
-            </div>
+            ${sidebarContentHtml}
           </aside>
 
-          <!-- CENTER: Chessboard Arena -->
+          <!-- COLUNA CENTRAL: ARENA DO TABULEIRO -->
           <section class="board-arena">
+            <!-- BANNER ADVERSÁRIO / TOPO -->
             <div class="player-bar ${topP.isTurn ? 'turn-active' : ''}">
               <div class="p-info">
                 <span class="p-color-box ${topP.color}">${topP.color === 'w' ? 'B' : 'P'}</span>
                 <div>
-                  <div class="p-name">${topP.name} ${topP.isTurn ? '<span class="turn-pill">Vez de jogar</span>' : ''}</div>
-                  <div class="p-sub">${game.event} (${game.year})</div>
+                  <div class="p-name">
+                    ${topP.name}
+                    ${topP.isTurn ? '<span class="turn-pill">Vez de jogar</span>' : ''}
+                  </div>
+                  <div class="p-sub">${topP.sub}</div>
                 </div>
               </div>
               <div class="p-mat">
-                ${topP. adv > 0 ? `<span class="mat-adv">+${topP.adv}</span>` : ''}
+                ${topP.adv > 0 ? `<span class="mat-adv">+${topP.adv}</span>` : ''}
               </div>
             </div>
 
+            <!-- TABULEIRO COM BEZEL E BARRA DE AVALIAÇÃO -->
             <div class="board-row-wrap">
-              ${
-                engineEval
-                  ? `<div class="eval-bar">
-                      <div class="eval-black" style="height:${Math.max(5, Math.min(95, 50 - engineEval.scoreCp / 20))}%"></div>
-                      <div class="eval-white" style="height:${Math.max(5, Math.min(95, 50 + engineEval.scoreCp / 20))}%"></div>
-                      <span class="eval-score">${engineEval.scoreCp > 0 ? '+' : ''}${(engineEval.scoreCp / 100).toFixed(1)}</span>
-                     </div>`
-                  : ''
-              }
+              <div class="eval-bar" title="Barra de Avaliação Stockfish">
+                <div class="eval-black" style="height:${50 - Math.min(48, Math.max(-48, (engineEval?.scoreCp || 0) / 10))}%"></div>
+                <div class="eval-white" style="height:${50 + Math.min(48, Math.max(-48, (engineEval?.scoreCp || 0) / 10))}%"></div>
+                <div class="eval-score">${state.engineEnabled ? ((engineEval?.scoreCp || 0) / 100).toFixed(1) : ''}</div>
+              </div>
+
               <div class="board-bezel">
-                <div class="board-grid" id="chessboard-grid" style="border-color:${theme.border}">
+                <div class="board-grid">
                   ${squaresHtml}
                   ${arrowsSvg}
                 </div>
               </div>
             </div>
 
+            <!-- BANNER PROTAGONISTA / BAIXO -->
             <div class="player-bar ${botP.isTurn ? 'turn-active' : ''}">
               <div class="p-info">
                 <span class="p-color-box ${botP.color}">${botP.color === 'w' ? 'B' : 'P'}</span>
                 <div>
-                  <div class="p-name">${botP.name} ${botP.isTurn ? '<span class="turn-pill">Vez de jogar</span>' : ''}</div>
-                  <div class="p-sub">${game.openingNamePt} · Resultado: ${game.result}</div>
+                  <div class="p-name">
+                    ${botP.name}
+                    ${botP.isTurn ? '<span class="turn-pill">Vez de jogar</span>' : ''}
+                  </div>
+                  <div class="p-sub">${botP.sub}</div>
                 </div>
               </div>
               <div class="p-mat">
@@ -808,209 +1224,205 @@
               </div>
             </div>
 
+            <!-- BARRA DE CONTROLE E NAVEGAÇÃO DO TABULEIRO -->
             <div class="board-toolbar">
               <div class="nav-btns">
-                <button id="btn-first" ${state.studyMode === 'guess' || state.currentPly === 0 ? 'disabled' : ''} title="Início (Home)">⏮</button>
-                <button id="btn-prev" ${state.studyMode === 'guess' || state.currentPly === 0 ? 'disabled' : ''} title="Anterior (←)">◀</button>
-                <span class="ply-counter">${state.currentPly}/${steps.length}</span>
-                <button id="btn-next" ${state.studyMode === 'guess' || state.currentPly >= steps.length ? 'disabled' : ''} title="Próximo (→)">▶</button>
-                <button id="btn-last" ${state.studyMode === 'guess' || state.currentPly >= steps.length ? 'disabled' : ''} title="Fim (End)">⏭</button>
+                <button id="btn-first" title="Início (Home)" ${state.currentPly === 0 ? 'disabled' : ''}>⏮</button>
+                <button id="btn-prev" title="Lance Anterior (←)" ${state.currentPly === 0 ? 'disabled' : ''}>◀</button>
+                <span class="ply-counter">${state.currentPly} / ${steps.length}</span>
+                <button id="btn-next" title="Próximo Lance (→)" ${state.currentPly >= steps.length ? 'disabled' : ''}>▶</button>
+                <button id="btn-last" title="Final (End)" ${state.currentPly >= steps.length ? 'disabled' : ''}>⏭</button>
               </div>
 
               <div class="tool-btns">
-                <button id="btn-flip" class="tool-btn" title="Girar Tabuleiro (Tecla X ou F)">
-                  🔄 Girar (${state.flipped ? 'Pretas' : 'Brancas'})
-                </button>
-                <select id="sel-theme" class="theme-select">
+                <button id="btn-flip" title="Girar Tabuleiro (X ou F)">🔄 Inverter</button>
+                <select id="sel-theme" class="theme-select" title="Tema do Tabuleiro">
                   ${Object.entries(BOARD_THEMES)
                     .map(
-                      ([id, t]) =>
-                        `<option value="${id}" ${state.boardTheme === id ? 'selected' : ''}>${t.name}</option>`
+                      ([k, v]) => `
+                    <option value="${k}" ${state.boardTheme === k ? 'selected' : ''}>${v.name}</option>`
                     )
                     .join('')}
                 </select>
-                <button id="btn-engine" class="tool-btn ${state.engineEnabled ? 'active-sky' : ''}" ${state.studyMode === 'guess' ? 'disabled' : ''}>
+                <button id="btn-engine" class="tool-btn ${state.engineEnabled ? 'active-sky' : ''}" title="Ativar Avaliação Stockfish">
                   ⚡ Stockfish
                 </button>
-                <button id="btn-mute" class="tool-btn">
+                <button id="btn-mute" class="tool-btn" title="Silenciar Sons">
                   ${audio.muted ? '🔇' : '🔊'}
                 </button>
               </div>
             </div>
           </section>
 
-          <!-- RIGHT PANEL: Commentary & Move Sheet OR Spoiler-Free Guess Mode -->
-          <section class="study-panel">
-            ${
-              state.studyMode === 'guess'
-                ? renderGuessPanelHtml(game, targetGuessStep, steps.length)
-                : renderStudyPanelHtml(book, game, activeStep, moveRowsHtml, engineEval)
-            }
-          </section>
+          <!-- COLUNA DIREITA: PAINEL DE ESTUDO & NOTAS -->
+          <aside class="study-panel">
+            <div class="study-panel-tabs">
+              <button class="study-tab-btn ${state.rightPanelTab === 'study' ? 'active' : ''}" id="study-tab-notes">
+                📖 Estudo & Teoria
+              </button>
+              <button class="study-tab-btn ${state.rightPanelTab === 'movesheet' ? 'active' : ''}" id="study-tab-sheet">
+                📋 Planilha (${steps.length} lances)
+              </button>
+            </div>
+
+            <div class="study-container">
+              ${rightPanelContentHtml}
+            </div>
+          </aside>
         </main>
       </div>
     `;
 
-    bindEvents();
-  }
-
-  function renderGuessPanelHtml(game, targetStep, totalPlies) {
-    const acc =
-      state.guessStats.attempts > 0
-        ? Math.round((state.guessStats.correct / state.guessStats.attempts) * 100)
-        : 100;
-
-    if (!targetStep) {
-      return `
-        <div class="guess-card">
-          <h3>🏆 Treino da Partida Concluído!</h3>
-          <p>Acertos: <strong>${state.guessStats.correct}</strong> · Precisão: <strong>${acc}%</strong></p>
-          <button id="btn-exit-guess" class="primary-btn">Voltar ao Modo Leitura</button>
-        </div>
-      `;
+    // ==========================================================================
+    // 7. EVENT LISTENERS E BINDINGS
+    // ==========================================================================
+    // Top Tabs
+    const topLib = document.getElementById('top-nav-library');
+    if (topLib) {
+      topLib.onclick = () => {
+        state.activeNavTab = 'library';
+        render();
+      };
+    }
+    const topOps = document.getElementById('top-nav-openings');
+    if (topOps) {
+      topOps.onclick = () => {
+        state.activeNavTab = 'openings';
+        render();
+      };
     }
 
-    const moveLabel = formatMoveByMode(targetStep, state.notationMode);
-    const hintText =
-      targetStep.annotation?.hintPt ||
-      `Observe a peça na casa ${targetStep.from.toUpperCase()} e procure o lance mais ativo.`;
+    // Sidebar Tabs
+    const sideLib = document.getElementById('side-tab-lib');
+    if (sideLib) {
+      sideLib.onclick = () => {
+        state.activeNavTab = 'library';
+        render();
+      };
+    }
+    const sideOps = document.getElementById('side-tab-ops');
+    if (sideOps) {
+      sideOps.onclick = () => {
+        state.activeNavTab = 'openings';
+        render();
+      };
+    }
 
-    return `
-      <div class="guess-container">
-        <div class="guess-header">
-          <div>
-            <span class="guess-badge">🎯 Modo Adivinhe · Sem Spoilers</span>
-            <p class="guess-sub">Explicações do livro ocultas até você acertar o lance no tabuleiro</p>
-          </div>
-          <button id="btn-exit-guess" class="tool-btn">Sair</button>
-        </div>
-
-        <div class="guess-stats-grid">
-          <div class="stat-box"><span>Acertos</span><strong>${state.guessStats.correct}</strong></div>
-          <div class="stat-box"><span>Precisão</span><strong>${acc}%</strong></div>
-          <div class="stat-box"><span>Progresso</span><strong>${state.currentPly + 1}/${totalPlies}</strong></div>
-        </div>
-
-        ${
-          !state.guessSolved
-            ? `<div class="guess-challenge-box">
-                <div class="challenge-turn">Lance ${targetStep.moveNumber} das ${targetStep.color === 'w' ? 'Brancas' : 'Pretas'}</div>
-                <h4>Qual foi o lance de ${targetStep.color === 'w' ? game.white : game.black} nesta posição?</h4>
-                <p>Clique na peça e na casa de destino diretamente no tabuleiro ao lado.</p>
-                ${
-                  state.guessWrongMove
-                    ? `<div class="wrong-alert">❌ Você tentou <strong>${state.guessWrongMove}</strong>. No livro, o mestre escolheu outro caminho!</div>`
-                    : ''
-                }
-                ${
-                  state.guessShowHint
-                    ? `<div class="hint-alert">💡 <strong>Dica Posicional:</strong> ${hintText}</div>`
-                    : ''
-                }
-                <div class="guess-actions">
-                  <button id="btn-guess-hint" class="tool-btn">💡 Pedir Dica Posicional</button>
-                  <button id="btn-guess-reveal" class="tool-btn">👁 Revelar Lance</button>
-                </div>
-               </div>`
-            : `<div class="guess-solved-box">
-                <div class="solved-title">✅ Lance Desbloqueado: ${targetStep.moveNumber}${targetStep.color === 'w' ? '.' : '...'} ${moveLabel} (Descritiva: ${targetStep.descriptivePt})</div>
-                <div class="solved-comment">
-                  ${targetStep.annotation ? targetStep.annotation.commentPt : 'Lance natural de desenvolvimento da partida original.'}
-                </div>
-                <button id="btn-guess-next" class="primary-btn">Próximo Desafio do Livro →</button>
-               </div>`
+    // Search Input
+    const searchInput = document.getElementById('sidebar-search');
+    if (searchInput) {
+      searchInput.oninput = (e) => {
+        state.searchQuery = e.target.value;
+        render();
+        const el = document.getElementById('sidebar-search');
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
         }
-      </div>
-    `;
-  }
+      };
+    }
 
-  function renderStudyPanelHtml(book, game, activeStep, moveRowsHtml, engineEval) {
-    return `
-      <div class="study-container">
-        ${
-          state.customFen
-            ? `<div class="explore-banner">
-                <span>🧭 <strong>Exploração Livre:</strong> ${state.customHistory.join(' ')}</span>
-                <button id="btn-reset-explore" class="primary-btn-sm">Voltar ao Livro</button>
-               </div>`
-            : ''
+    // Toggle Book Accordion
+    document.querySelectorAll('[data-toggle-book]').forEach((el) => {
+      el.onclick = () => {
+        const bkId = el.getAttribute('data-toggle-book');
+        state.bookId = bkId;
+        if (state.expandedBookIds.includes(bkId)) {
+          state.expandedBookIds = state.expandedBookIds.filter((id) => id !== bkId);
+        } else {
+          state.expandedBookIds = [...state.expandedBookIds, bkId];
         }
+        render();
+      };
+    });
 
-        ${
-          engineEval
-            ? `<div class="engine-box">
-                <div>⚡ <strong>Stockfish Local Lite (M2 8GB):</strong> ${engineEval.scoreCp > 0 ? '+' : ''}${(engineEval.scoreCp / 100).toFixed(2)}</div>
-                <div>Melhor lance sugerido: <strong class="emerald-txt">${sanToPortugueseAlgebraic(engineEval.bestMoveSan)}</strong></div>
-               </div>`
-            : ''
+    // Isolate Chapter Click
+    document.querySelectorAll('[data-isolate-chap]').forEach((el) => {
+      el.onclick = (e) => {
+        e.stopPropagation();
+        const chId = el.getAttribute('data-isolate-chap');
+        const bkId = el.getAttribute('data-parent-book');
+        state.bookId = bkId;
+        state.isolatedChapterId = chId;
+        const targetBk = BOOKS.find((b) => b.id === bkId);
+        const targetCh = targetBk?.chapters.find((c) => c.id === chId);
+        if (targetCh && targetCh.games.length > 0) {
+          selectGame(bkId, chId, targetCh.games[0].id);
+        } else {
+          render();
         }
+      };
+    });
 
-        <div class="commentary-card">
-          ${
-            activeStep
-              ? `<div class="rosetta-strip">
-                  <span class="main-move-pill">${activeStep.moveNumber}${activeStep.color === 'w' ? '. ' : '... '}${formatMoveByMode(activeStep, state.notationMode)}</span>
-                  <div class="rosetta-tags">
-                    <span>PT: <strong>${sanToPortugueseAlgebraic(activeStep.san)}</strong></span>
-                    <span>Desc: <strong class="amber-txt">${activeStep.descriptivePt}</strong></span>
-                    <span>${sanToFigurine(activeStep.san, activeStep.color)}</span>
-                  </div>
-                 </div>
-                 <div class="comment-body">
-                  ${
-                    activeStep.annotation
-                      ? `<p>${activeStep.annotation.commentPt}</p>
-                         ${
-                           state.languageMode !== 'pt' && activeStep.annotation.commentOriginal
-                             ? `<p class="orig-comment">Original (${book.originalLanguage.toUpperCase()}): “${activeStep.annotation.commentOriginal}”</p>`
-                             : ''
-                         }`
-                      : `<p class="muted-txt">Avance com a seta → do teclado ou clique nos lances comentados abaixo.</p>`
-                  }
-                 </div>`
-              : `<div class="intro-body">
-                  <div class="intro-title">✨ Introdução do Capítulo</div>
-                  <p>${game.introPt}</p>
-                  ${
-                    state.languageMode !== 'pt' && game.introOriginal
-                      ? `<p class="orig-comment">Original: “${game.introOriginal}”</p>`
-                      : ''
-                  }
-                 </div>`
+    // Back to all Chapters button
+    const btnBackBooks = document.getElementById('btn-back-to-books');
+    if (btnBackBooks) {
+      btnBackBooks.onclick = () => {
+        state.isolatedChapterId = null;
+        render();
+      };
+    }
+
+    // Game card click in isolated chapter view
+    document.querySelectorAll('.game-card').forEach((el) => {
+      el.onclick = () => {
+        const bkId = el.getAttribute('data-sel-book');
+        const chId = el.getAttribute('data-sel-chap');
+        const gmId = el.getAttribute('data-sel-game');
+        selectGame(bkId, chId, gmId);
+      };
+    });
+
+    // Toggle Opening Category
+    document.querySelectorAll('[data-toggle-cat]').forEach((el) => {
+      el.onclick = () => {
+        const catId = el.getAttribute('data-toggle-cat');
+        state.selectedOpeningCat = state.selectedOpeningCat === catId ? '' : catId;
+        render();
+      };
+    });
+
+    // Select Opening Study
+    document.querySelectorAll('[data-sel-opening]').forEach((el) => {
+      el.onclick = () => {
+        const opId = el.getAttribute('data-sel-opening');
+        selectOpening(opId);
+      };
+    });
+
+    // Jump from opening to related book game
+    document.querySelectorAll('[data-jump-game]').forEach((el) => {
+      el.onclick = () => {
+        const gmId = el.getAttribute('data-jump-game');
+        for (const bk of BOOKS) {
+          for (const ch of bk.chapters) {
+            const gm = ch.games.find((g) => g.id === gmId);
+            if (gm) {
+              selectGame(bk.id, ch.id, gm.id);
+              return;
+            }
           }
-        </div>
-
-        <div class="movesheet-box">
-          <div class="movesheet-header">
-            <span>Planilha Sincronizada (${state.notationMode.toUpperCase()})</span>
-            <span>Clique em qualquer lance</span>
-          </div>
-          <div class="movesheet-scroll">
-            ${moveRowsHtml}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function bindEvents() {
-    document.querySelectorAll('[data-book]').forEach((el) => {
-      el.onclick = () => {
-        const bk = BOOKS.find((b) => b.id === el.getAttribute('data-book'));
-        if (bk) selectGame(bk.id, bk.chapters[0].id, bk.chapters[0].games[0].id);
+        }
       };
     });
 
-    document.querySelectorAll('[data-sel-game]').forEach((el) => {
-      el.onclick = () => {
-        selectGame(
-          el.getAttribute('data-sel-book'),
-          el.getAttribute('data-sel-chap'),
-          el.getAttribute('data-sel-game')
-        );
+    // Study Panel Tabs
+    const tabNotes = document.getElementById('study-tab-notes');
+    if (tabNotes) {
+      tabNotes.onclick = () => {
+        state.rightPanelTab = 'study';
+        render();
       };
-    });
+    }
+    const tabSheet = document.getElementById('study-tab-sheet');
+    if (tabSheet) {
+      tabSheet.onclick = () => {
+        state.rightPanelTab = 'movesheet';
+        render();
+      };
+    }
 
+    // Notation Buttons
     document.querySelectorAll('[data-notation]').forEach((el) => {
       el.onclick = () => {
         state.notationMode = el.getAttribute('data-notation');
@@ -1018,103 +1430,61 @@
       };
     });
 
-    document.querySelectorAll('[data-lang]').forEach((el) => {
-      el.onclick = () => {
-        state.languageMode = el.getAttribute('data-lang');
-        render();
-      };
-    });
-
-    document.querySelectorAll('[data-ply]').forEach((el) => {
-      el.onclick = () => {
-        goToPly(parseInt(el.getAttribute('data-ply'), 10));
-      };
-    });
-
-    const btnStudy = document.getElementById('btn-mode-study');
-    if (btnStudy) {
-      btnStudy.onclick = () => {
+    // Study Modes (Leitura vs Adivinhe)
+    const btnModeStudy = document.getElementById('btn-mode-study');
+    if (btnModeStudy) {
+      btnModeStudy.onclick = () => {
         state.studyMode = 'study';
-        state.customFen = null;
+        state.rightPanelTab = 'study';
         render();
       };
     }
-
-    const btnGuess = document.getElementById('btn-mode-guess');
-    if (btnGuess) {
-      btnGuess.onclick = () => {
-        const gm = getActiveGame();
-        const { steps } = getGameSteps();
+    const btnModeGuess = document.getElementById('btn-mode-guess');
+    if (btnModeGuess) {
+      btnModeGuess.onclick = () => {
         state.studyMode = 'guess';
-        state.engineEnabled = false;
-        state.customFen = null;
-        state.flipped = gm.heroColor === 'b';
+        state.rightPanelTab = 'guess';
         state.guessSolved = false;
         state.guessWrongMove = null;
         state.guessShowHint = false;
-        if (gm.heroColor === 'b' && state.currentPly === 0 && steps.length > 0) {
-          state.currentPly = 1;
-        }
         render();
       };
     }
 
-    const btnExitGuess = document.getElementById('btn-exit-guess');
-    if (btnExitGuess) {
-      btnExitGuess.onclick = () => {
-        state.studyMode = 'study';
-        render();
+    // Guess mode actions
+    const btnGNext = document.getElementById('btn-guess-next');
+    if (btnGNext) {
+      btnGNext.onclick = () => {
+        state.guessSolved = false;
+        state.guessWrongMove = null;
+        state.guessShowHint = false;
+        goToPly(state.currentPly + 1);
       };
     }
-
-    const btnHint = document.getElementById('btn-guess-hint');
-    if (btnHint) {
-      btnHint.onclick = () => {
+    const btnGHint = document.getElementById('btn-guess-hint');
+    if (btnGHint) {
+      btnGHint.onclick = () => {
         state.guessShowHint = true;
         render();
       };
     }
-
-    const btnReveal = document.getElementById('btn-guess-reveal');
-    if (btnReveal) {
-      btnReveal.onclick = () => {
-        const { steps } = getGameSteps();
-        const target = steps[state.currentPly];
-        if (target) {
-          state.currentPly = target.ply;
-          state.guessSolved = true;
-          render();
-        }
-      };
-    }
-
-    const btnGuessNext = document.getElementById('btn-guess-next');
-    if (btnGuessNext) {
-      btnGuessNext.onclick = () => {
-        const gm = getActiveGame();
-        const { steps } = getGameSteps();
-        state.guessSolved = false;
-        state.guessWrongMove = null;
-        state.guessShowHint = false;
-        if (state.currentPly < steps.length && steps[state.currentPly].color !== gm.heroColor) {
-          state.currentPly = Math.min(steps.length, state.currentPly + 1);
-          audio.playMove();
-        }
+    const btnGRev = document.getElementById('btn-guess-reveal');
+    if (btnGRev) {
+      btnGRev.onclick = () => {
+        state.guessSolved = true;
         render();
       };
     }
 
-    const btnResetExp = document.getElementById('btn-reset-explore');
-    if (btnResetExp) {
-      btnResetExp.onclick = () => {
-        state.customFen = null;
-        state.customHistory = [];
-        state.customLastMove = null;
-        state.studyMode = 'study';
-        render();
+    // Move sheet buttons
+    document.querySelectorAll('.move-btn').forEach((btn) => {
+      btn.onclick = () => {
+        const ply = parseInt(btn.getAttribute('data-ply'), 10);
+        if (!isNaN(ply)) goToPly(ply);
       };
-    }
+    });
 
+    // Navigation Buttons
     const bFirst = document.getElementById('btn-first');
     if (bFirst) bFirst.onclick = () => goToPly(0);
     const bPrev = document.getElementById('btn-prev');
@@ -1124,7 +1494,7 @@
     const bLast = document.getElementById('btn-last');
     if (bLast) {
       bLast.onclick = () => {
-        const { steps } = getGameSteps();
+        const { steps } = getCurrentSteps();
         goToPly(steps.length);
       };
     }
@@ -1161,7 +1531,7 @@
       };
     }
 
-    // Board Square Click / Drag Interactions
+    // Board Square Click / Drag
     document.querySelectorAll('.board-sq').forEach((sqEl) => {
       const sq = sqEl.getAttribute('data-sq');
       sqEl.onmousedown = (e) => {
@@ -1216,6 +1586,7 @@
     });
   }
 
+  // Atalhos de teclado
   window.addEventListener('keydown', (e) => {
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
     if (e.key === 'x' || e.key === 'X' || e.key === 'f' || e.key === 'F') {
@@ -1236,7 +1607,7 @@
       goToPly(0);
     } else if (e.key === 'End') {
       e.preventDefault();
-      const { steps } = getGameSteps();
+      const { steps } = getCurrentSteps();
       goToPly(steps.length);
     }
   });

@@ -106,3 +106,6 @@ export interface EngineEvaluationResult {
   depth: number;
   explanationPt: string;
 }
+
+export type StudySourceType = 'book_game' | 'opening';
+
