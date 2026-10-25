@@ -109,3 +109,8 @@ export interface EngineEvaluationResult {
 
 export type StudySourceType = 'book_game' | 'opening';
 
+export type NavDestination = 'learn' | 'library' | 'openings' | 'achievements';
+
+export type AppExperienceMode = 'aprender' | 'explorador';
+
+

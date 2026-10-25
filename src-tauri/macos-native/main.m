@@ -28,10 +28,10 @@
                                               styleMask:style
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
-    [self.window setTitle:@"Chess Mastery — Academia Interativa de Clássicos"];
+    [self.window setTitle:@"Chess Mastery — Academia Lúdica & Treinador Inteligente de Aberturas"];
     [self.window setMinSize:NSMakeSize(1120, 740)];
-    [self.window setBackgroundColor:[NSColor colorWithSRGBRed:0.047 green:0.055 blue:0.071 alpha:1.0]];
-    [self.window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameDarkAqua]];
+    [self.window setBackgroundColor:[NSColor colorWithSRGBRed:1.0 green:0.976 blue:0.929 alpha:1.0]];
+    [self.window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameAqua]];
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
     [config.preferences setValue:@YES forKey:@"allowFileAccessFromFileURLs"];
