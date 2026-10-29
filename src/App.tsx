@@ -9,29 +9,21 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  Target,
-  Sparkles,
-  Download,
-  Upload,
   Search,
   ChevronDown,
   ArrowLeft,
   CheckCircle2,
-  Shield,
-  Swords,
-  Castle,
-  Zap,
-  Globe,
   Compass,
-  Trophy,
   Lightbulb,
-  SlidersHorizontal,
   FileSearch,
+  Cpu,
+  GraduationCap,
+  LayoutGrid,
+  BarChart3,
 } from 'lucide-react';
 import {
   formatMoveByMode,
   sanToPortugueseAlgebraic,
-  sanToFigurine,
 } from '@shared/ui/chess/descriptiveNotation';
 import {
   buildProgressiveHints,
@@ -45,19 +37,14 @@ import { chessAudio } from '@shared/ui/chess/chessAudio';
 import { PREINSTALLED_BOOKS } from '@/data/preinstalledBooks';
 import {
   CHESS_OPENINGS,
-  OPENING_CATEGORIES,
   type ChessOpeningStudy,
 } from '@/data/openingsData';
 import { buildGameSteps } from '@/lib/chess/gameBuilder';
-import {
-  analyzePositionLocal,
-  computeMaterialBalance,
-} from '@/lib/chess/localStockfishEngine';
-import { InteractiveChessboard, BOARD_THEMES } from '@/components/InteractiveChessboard';
+import { analyzePositionLocal } from '@/lib/chess/localStockfishEngine';
+import { InteractiveChessboard } from '@/components/InteractiveChessboard';
 import { VerticalEvaluationBar } from '@/components/BoardSideComponents';
 import type {
   BoardThemeId,
-  LanguageDisplayMode,
   NotationMode,
   StudySourceType,
   NavDestination,
@@ -67,17 +54,20 @@ import type {
 const STORAGE_KEY = 'chess_mastery_progress_v2';
 
 export const App: React.FC = () => {
-  // 4 Destinos de Navegação & 2 Modos de Uso (Redesign Infantil)
-  const [navDest, setNavDest] = useState<NavDestination>('learn');
+  // Navegação Framed-Sheet Shell (4 Destinos + 2 Modos de Uso)
+  const [navDest, setNavDest] = useState<NavDestination>('library');
+  const [canvasView, setCanvasView] = useState<'board' | 'overview'>('board');
   const [experienceMode, setExperienceMode] = useState<AppExperienceMode>('aprender');
-  const [currentStudyType, setCurrentStudyType] = useState<StudySourceType>('opening');
+  const [currentStudyType, setCurrentStudyType] = useState<StudySourceType>('book_game');
+  const [rightTab, setRightTab] = useState<'guidance' | 'movesheet' | 'plan'>('guidance');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
   const [showOcrModal, setShowOcrModal] = useState<boolean>(false);
 
   // Livros, Acordeão e Modo Isolado de Capítulo
   const [selectedBookId, setSelectedBookId] = useState<string>(PREINSTALLED_BOOKS[0].id);
-  const [expandedBookIds, setExpandedBookIds] = useState<string[]>([PREINSTALLED_BOOKS[0].id]);
+  const [expandedBookIds, setExpandedBookIds] = useState<string[]>(
+    PREINSTALLED_BOOKS.map((b) => b.id)
+  );
   const [isolatedChapterId, setIsolatedChapterId] = useState<string | null>(null);
   const [selectedGameId, setSelectedGameId] = useState<string>(
     PREINSTALLED_BOOKS[0].chapters[0].games[0].id
@@ -87,7 +77,7 @@ export const App: React.FC = () => {
   const [selectedOpeningCat, setSelectedOpeningCat] = useState<string>('all');
   const [selectedOpeningId, setSelectedOpeningId] = useState<string>(CHESS_OPENINGS[0].id);
   const [trainerColor, setTrainerColor] = useState<TrainerColorMode>('w');
-  const [trainerActive, setTrainerActive] = useState<boolean>(true);
+  const [trainerActive, setTrainerActive] = useState<boolean>(false);
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3>(0);
   const [lastFeedback, setLastFeedback] = useState<EvaluatedUserMove | null>(null);
 
@@ -108,36 +98,16 @@ export const App: React.FC = () => {
     return [];
   });
 
-  const [starsEarned, setStarsEarned] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw).starsEarned || 12;
-    } catch {}
-    return 12;
-  });
-
-  const [notesByGameId, setNotesByGameId] = useState<Record<string, string>>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw).notesByGameId || {};
-    } catch {}
-    return {};
-  });
-
   // Preferências
   const [notationMode, setNotationMode] = useState<NotationMode>('alg_pt');
-  const [boardTheme, setBoardTheme] = useState<BoardThemeId>('lichess_wood');
-  const [languageMode, setLanguageMode] = useState<LanguageDisplayMode>('bilingual');
+  const [boardTheme] = useState<BoardThemeId>('lichess_wood');
   const [soundMuted, setSoundMuted] = useState<boolean>(false);
 
   // Tabuleiro e Lances
   const [currentPly, setCurrentPly] = useState<number>(0);
   const [flipped, setFlipped] = useState<boolean>(false);
-
-  // Exploração livre
   const [customFen, setCustomFen] = useState<string | null>(null);
 
-  // Persistência local
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -145,32 +115,15 @@ export const App: React.FC = () => {
         JSON.stringify({
           completedGameIds,
           reviewQueue,
-          starsEarned,
-          notesByGameId,
           preferredNotation: notationMode,
-          preferredTheme: boardTheme,
-          preferredLanguage: languageMode,
         })
       );
     } catch {}
-  }, [
-    completedGameIds,
-    reviewQueue,
-    starsEarned,
-    notesByGameId,
-    notationMode,
-    boardTheme,
-    languageMode,
-  ]);
+  }, [completedGameIds, reviewQueue, notationMode]);
 
   useEffect(() => {
     chessAudio.setMuted(soundMuted);
   }, [soundMuted]);
-
-  const currentBook = useMemo(
-    () => PREINSTALLED_BOOKS.find((b) => b.id === selectedBookId) || PREINSTALLED_BOOKS[0],
-    [selectedBookId]
-  );
 
   const currentChapterAndGame = useMemo(() => {
     for (const book of PREINSTALLED_BOOKS) {
@@ -198,7 +151,7 @@ export const App: React.FC = () => {
         titlePt: currentOpening.namePt,
         white: 'Brancas (Teoria)',
         black: 'Pretas (Teoria)',
-        event: `${currentOpening.eco} • ${currentOpening.nameOriginal}`,
+        event: `${currentOpening.eco} · ${currentOpening.nameOriginal}`,
         year: '2026',
         result: '1/2-1/2',
         eco: currentOpening.eco,
@@ -250,14 +203,14 @@ export const App: React.FC = () => {
     });
   }, [currentStudyType, currentChapterAndGame, currentOpening, currentPly]);
 
-  // Auto-avança o lance do adversário quando o Treinador está focado em 1 cor
+  // Auto-avança o lance do adversário quando o Treinador está ativo em 1 cor
   useEffect(() => {
     if (!trainerActive || customFen || !nextExpectedStep) return;
     if (trainerColor === 'both') return;
     if (nextExpectedStep.color !== trainerColor) {
       const timer = setTimeout(() => {
         setCurrentPly((prev) => Math.min(steps.length, prev + 1));
-      }, 360);
+      }, 340);
       return () => clearTimeout(timer);
     }
   }, [trainerActive, customFen, nextExpectedStep, trainerColor, steps.length]);
@@ -277,6 +230,7 @@ export const App: React.FC = () => {
     setSelectedBookId(bookId);
     setSelectedGameId(gameId);
     setCurrentStudyType('book_game');
+    setCanvasView('board');
     setCurrentPly(0);
     setCustomFen(null);
     setHintLevel(0);
@@ -286,6 +240,7 @@ export const App: React.FC = () => {
   const handleSelectOpening = (opening: ChessOpeningStudy) => {
     setSelectedOpeningId(opening.id);
     setCurrentStudyType('opening');
+    setCanvasView('board');
     setCurrentPly(0);
     setCustomFen(null);
     setHintLevel(0);
@@ -311,7 +266,6 @@ export const App: React.FC = () => {
 
       if (result.accepted) {
         chessAudio.playSuccess();
-        setStarsEarned((s) => s + 1);
         setHintLevel(0);
         setCurrentPly((p) => Math.min(steps.length, p + 1));
         return true;
@@ -367,353 +321,351 @@ export const App: React.FC = () => {
       : currentChapterAndGame.game.titlePt;
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#FFF9ED] text-[#2B261F] select-none">
-      {/* BARRA SUPERIOR AMIGÁVEL: 4 DESTINOS + ALTERNADOR DE MODO */}
-      <header className="h-16 shrink-0 bg-[#FFFDF8] border-b-2 border-[#EADBC4] px-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#16865E] text-white flex items-center justify-center font-black text-xl shadow-sm">
-            ♞
+    <div className="h-screen w-screen overflow-hidden grid grid-cols-[248px_minmax(0,1fr)] grid-rows-[48px_minmax(0,1fr)] bg-[#f4f6f5] text-[#131416] select-none font-sans">
+      {/* 1. CANTO SUPERIOR ESQUERDO DA MOLDURA EM L: MARCA DO PRODUTO + ESCOPO */}
+      <div className="col-start-1 row-start-1 flex items-center justify-between px-3.5 bg-[#f4f6f5]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-6 h-6 rounded-[6px] bg-[#1b6c80] text-white flex items-center justify-center text-xs font-semibold">
+            CM
           </div>
-          <div>
-            <h1 className="text-base font-extrabold tracking-tight text-[#2B261F]">
-              Chess Mastery
-            </h1>
-            <p className="text-[11px] font-bold text-[#6E6355]">
-              Academia Lúdica & Treinador Inteligente de Aberturas
-            </p>
-          </div>
+          <span className="text-[14px] font-semibold tracking-tight text-[#131416]">
+            Chess Mastery
+          </span>
+        </div>
+        <span className="text-[11px] font-mono text-[#5a5d60] bg-[#e8ecea] px-1.5 py-0.5 rounded">
+          v1.3
+        </span>
+      </div>
+
+      {/* 2. BARRA SUPERIOR (48px) SOBRE O MESMO --GROUND DA MOLDURA EM L */}
+      <header className="col-start-2 row-start-1 h-12 flex items-center justify-between gap-4 pl-2 pr-4 bg-[#f4f6f5]">
+        <div className="relative w-full max-w-[480px] h-8 flex items-center">
+          <Search className="w-3.5 h-3.5 text-[#5a5d60] absolute left-2.5" strokeWidth={1.5} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filtrar livros, capítulos, mestres ou aberturas (ex.: C50, Siciliana)..."
+            className="w-full h-8 bg-white border border-[#e6e8ea] rounded-[6px] pl-8 pr-8 text-[13px] text-[#131416] placeholder:text-[#686b6e] focus:outline-none focus:border-[#1b6c80]"
+          />
         </div>
 
-        {/* 4 Destinos Principais */}
-        <nav className="flex items-center gap-1.5 bg-[#F4EBD9] p-1.5 rounded-2xl border border-[#E5D5BC]">
-          {(
-            [
-              { id: 'learn', label: '🌟 Aprender' },
-              { id: 'library', label: '📚 Biblioteca' },
-              { id: 'openings', label: '♟️ Aberturas' },
-              { id: 'achievements', label: '🏆 Conquistas' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setNavDest(tab.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
-                navDest === tab.id
-                  ? 'bg-[#16865E] text-white shadow-sm'
-                  : 'text-[#5C5245] hover:bg-[#FFF9ED]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Modos de Uso: Aprender (Padrão) vs Explorador (Opcional) */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center bg-[#F4EBD9] p-1 rounded-xl border border-[#E5D5BC]">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex p-0.5 rounded-[7px] bg-[#f4f6f8] border border-[#e6e8ea]">
             <button
               onClick={() => setExperienceMode('aprender')}
-              className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
+              className={`h-[26px] px-2.5 rounded-[5px] text-xs font-medium ${
                 experienceMode === 'aprender'
-                  ? 'bg-[#DDF3E5] text-[#0E5E40] border border-[#8CD4AE]'
-                  : 'text-[#6E6355]'
+                  ? 'bg-white text-[#131416] font-semibold'
+                  : 'text-[#5a5d60]'
               }`}
             >
-              🌱 Modo Aprender
+              Modo Aprender
             </button>
             <button
               onClick={() => setExperienceMode('explorador')}
-              className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all ${
+              className={`h-[26px] px-2.5 rounded-[5px] text-xs font-medium ${
                 experienceMode === 'explorador'
-                  ? 'bg-[#DCEBFF] text-[#184E88] border border-[#96C2F7]'
-                  : 'text-[#6E6355]'
+                  ? 'bg-white text-[#131416] font-semibold'
+                  : 'text-[#5a5d60]'
               }`}
             >
-              🧭 Modo Explorador
+              Modo Explorador
             </button>
           </div>
 
-          <div className="px-3 py-1.5 rounded-xl bg-[#FFE5A8] border border-[#F2C45A] text-[#664600] text-xs font-extrabold flex items-center gap-1.5">
-            ⭐ {starsEarned}
-          </div>
+          <button
+            onClick={() => setShowOcrModal(true)}
+            className="h-8 px-3 rounded-[6px] border border-[#cdced1] bg-white text-xs font-medium text-[#131416] flex items-center gap-1.5"
+          >
+            <FileSearch className="w-3.5 h-3.5" strokeWidth={1.5} /> Fontes e OCR
+          </button>
+
+          <button
+            onClick={() => setSoundMuted((m) => !m)}
+            className="h-8 px-2.5 rounded-[6px] border border-[#cdced1] bg-white text-[#131416] flex items-center justify-center"
+          >
+            {soundMuted ? (
+              <VolumeX className="w-3.5 h-3.5" strokeWidth={1.5} />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+            )}
+          </button>
         </div>
       </header>
 
-      {/* CORPO PRINCIPAL */}
-      <div className="flex-1 min-h-0 flex overflow-hidden">
-        {/* SIDEBAR ESQUERDA CONTEXTUAL */}
-        <aside className="w-80 shrink-0 bg-[#FFFDF8] border-r-2 border-[#EADBC4] flex flex-col h-full">
-          <div className="p-3.5 border-b border-[#EADBC4]">
-            <div className="relative">
-              <Search className="w-4 h-4 text-[#8C7D6B] absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar livro, capítulo ou abertura..."
-                className="w-full bg-[#FFF9ED] border border-[#DFCEB4] rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-[#2B261F] placeholder:text-[#9A8B78] focus:outline-none focus:border-[#16865E]"
-              />
-            </div>
-          </div>
+      {/* 3. SIDEBAR ESQUERDA (248px) SOBRE O MESMO --GROUND DA MOLDURA EM L */}
+      <aside className="col-start-1 row-start-2 flex flex-col px-3 pt-2 pb-3.5 bg-[#f4f6f5] overflow-hidden">
+        <nav className="flex flex-col gap-0.5 mb-3">
+          {(
+            [
+              { id: 'learn', label: 'Aprender e revisar', icon: Compass, count: `${reviewQueue.length} revisão` },
+              { id: 'library', label: 'Biblioteca de livros', icon: BookOpen, count: '4 livros' },
+              { id: 'openings', label: 'Aberturas e defesas', icon: LayoutGrid, count: '18 linhas' },
+              { id: 'achievements', label: 'Progresso e acervo', icon: BarChart3, count: `${completedGameIds.length}/12` },
+            ] as const
+          ).map((item) => {
+            const Icon = item.icon;
+            const active = navDest === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setNavDest(item.id);
+                  setCanvasView(item.id === 'learn' || item.id === 'achievements' ? 'overview' : 'board');
+                }}
+                className={`h-8 px-2.5 rounded-[8px] flex items-center justify-between text-[14px] transition-colors ${
+                  active ? 'bg-[#e8ecea] text-[#131416] font-medium' : 'text-[#5a5d60] hover:bg-[#f4f6f8]'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Icon className="w-4 h-4" strokeWidth={1.5} />
+                  <span>{item.label}</span>
+                </span>
+                <span className="font-mono text-[11px] text-[#5a5d60]">{item.count}</span>
+              </button>
+            );
+          })}
+        </nav>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-            {navDest === 'library' ? (
-              PREINSTALLED_BOOKS.map((book) => {
-                const isExpanded = expandedBookIds.includes(book.id);
-                return (
-                  <div
-                    key={book.id}
-                    className="rounded-2xl border-2 border-[#EADBC4] bg-[#FFF9ED] overflow-hidden"
+        <div className="flex-1 overflow-y-auto border-t border-[#e6e8ea] pt-2.5 space-y-1.5">
+          {navDest === 'openings' ? (
+            CHESS_OPENINGS.map((op) => (
+              <button
+                key={op.id}
+                onClick={() => handleSelectOpening(op)}
+                className={`w-full text-left p-2.5 rounded-[8px] border transition-colors ${
+                  currentStudyType === 'opening' && selectedOpeningId === op.id
+                    ? 'bg-[#e8ecea] border-[#c5d4d8]'
+                    : 'bg-white border-[#e6e8ea] hover:bg-[#f4f6f8]'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] font-semibold text-[#1b6c80]">{op.eco}</span>
+                  <span className="text-[11px] text-[#5a5d60]">{op.categoryLabelPt}</span>
+                </div>
+                <div className="text-[12.5px] font-semibold text-[#131416] mt-0.5">{op.namePt}</div>
+              </button>
+            ))
+          ) : (
+            PREINSTALLED_BOOKS.map((book) => {
+              const isExpanded = expandedBookIds.includes(book.id);
+              return (
+                <div key={book.id} className="bg-white border border-[#e6e8ea] rounded-[8px] overflow-hidden">
+                  <button
+                    onClick={() =>
+                      setExpandedBookIds((prev) =>
+                        prev.includes(book.id) ? prev.filter((id) => id !== book.id) : [...prev, book.id]
+                      )
+                    }
+                    className="w-full p-2.5 text-left flex items-center justify-between hover:bg-[#f4f6f8]"
                   >
-                    <button
-                      onClick={() =>
-                        setExpandedBookIds((prev) =>
-                          prev.includes(book.id)
-                            ? prev.filter((id) => id !== book.id)
-                            : [...prev, book.id]
-                        )
-                      }
-                      className="w-full p-3 text-left flex items-center justify-between hover:bg-[#F5EBD8]"
-                    >
-                      <div>
-                        <div className="text-[10px] font-extrabold uppercase text-[#16865E]">
-                          {book.author}
-                        </div>
-                        <div className="text-xs font-extrabold text-[#2B261F]">
-                          {book.titlePt}
-                        </div>
-                      </div>
-                      <ChevronDown
-                        className={`w-4 h-4 text-[#6E6355] transition-transform ${
-                          isExpanded ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
-                    {isExpanded && (
-                      <div className="p-2.5 pt-0 space-y-2 border-t border-[#EADBC4]">
-                        {book.chapters.map((ch) => (
-                          <div key={ch.id} className="bg-[#FFFDF8] rounded-xl p-2 border border-[#EADBC4]">
-                            <div className="text-[11px] font-extrabold text-[#2B261F] mb-1">
-                              Cap. {ch.number} — {ch.titlePt}
-                            </div>
-                            <div className="space-y-1">
-                              {ch.games.map((g) => (
-                                <button
-                                  key={g.id}
-                                  onClick={() => handleSelectGame(book.id, g.id)}
-                                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                    currentStudyType === 'book_game' && selectedGameId === g.id
-                                      ? 'bg-[#DDF3E5] text-[#0E5E40] border border-[#8CD4AE]'
-                                      : 'text-[#5C5245] hover:bg-[#F4EBD9]'
-                                  }`}
-                                >
-                                  {g.titlePt}
-                                </button>
-                              ))}
-                            </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-[#131416]">{book.titlePt}</div>
+                      <div className="text-[11.5px] text-[#5a5d60]">{book.author}</div>
+                    </div>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-[#5a5d60] transition-transform ${
+                        isExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {isExpanded && (
+                    <div className="p-1.5 border-t border-[#f0f1f2] bg-[#fafbfb] space-y-1.5">
+                      {book.chapters.map((ch) => (
+                        <div key={ch.id} className="bg-white border border-[#e6e8ea] rounded-[6px] p-1.5">
+                          <div className="text-[11.5px] font-medium text-[#131416] px-1 mb-1">
+                            Cap. {ch.number} · {ch.titlePt}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              CHESS_OPENINGS.map((op) => (
-                <button
-                  key={op.id}
-                  onClick={() => handleSelectOpening(op)}
-                  className={`w-full text-left p-3 rounded-2xl border-2 transition-all ${
-                    currentStudyType === 'opening' && selectedOpeningId === op.id
-                      ? 'bg-[#DDF3E5] border-[#16865E]'
-                      : 'bg-[#FFF9ED] border-[#EADBC4] hover:border-[#C8B496]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="px-2 py-0.5 rounded-md bg-[#FFE5A8] text-[#664600] text-[10px] font-extrabold">
-                      {op.eco}
-                    </span>
-                    <span className="text-[10px] font-bold text-[#6E6355]">
-                      {op.recommendedFor === 'white'
-                        ? '⚪ Brancas'
-                        : op.recommendedFor === 'black'
-                        ? '⚫ Pretas'
-                        : '☯️ Ambas'}
-                    </span>
-                  </div>
-                  <div className="text-xs font-extrabold text-[#2B261F]">{op.namePt}</div>
-                  <div className="text-[11px] text-[#6E6355] line-clamp-2 mt-0.5">
-                    {op.summaryPt}
-                  </div>
-                </button>
-              ))
-            )}
+                          {ch.games.map((g) => (
+                            <button
+                              key={g.id}
+                              onClick={() => handleSelectGame(book.id, g.id)}
+                              className={`w-full text-left px-2 py-1 rounded text-xs ${
+                                currentStudyType === 'book_game' && selectedGameId === g.id
+                                  ? 'bg-[#e8ecea] text-[#131416] font-medium'
+                                  : 'text-[#5a5d60] hover:bg-[#f4f6f8]'
+                              }`}
+                            >
+                              {g.titlePt}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </aside>
+
+      {/* 4. A FOLHA BRANCA DE TRABALHO (.work-sheet: 8px inset, 16px radius, 1px border, sem sombra) */}
+      <main className="col-start-2 row-start-2 mr-2 mb-2 bg-white border border-[#e6e8ea] rounded-[16px] p-6 flex flex-col min-w-0 min-h-0 overflow-hidden">
+        <div className="flex items-start justify-between gap-4 pb-3.5 border-b border-[#e6e8ea] shrink-0">
+          <div>
+            <h1 className="text-[22px] font-semibold tracking-tight text-[#131416]">{activeStudyTitle}</h1>
+            <p className="text-[13px] text-[#5a5d60] mt-0.5">
+              Lance <span className="font-mono">{currentPly}</span> de{' '}
+              <span className="font-mono">{steps.length}</span>
+            </p>
           </div>
-        </aside>
 
-        {/* PALCO CENTRAL: TABULEIRO DOMINANTE + BARRA DE PROGRESSO + CONTROLES ESSENCIAIS */}
-        <main className="flex-1 min-w-0 flex flex-col items-center justify-between p-5 bg-[#FFF9ED] overflow-y-auto">
-          {/* Cabeçalho da Lição & Seletor de Cor do Treinador */}
-          <div className="w-full max-w-[640px] bg-[#FFFDF8] border-2 border-[#EADBC4] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-sm">
-            <div>
-              <span className="text-[11px] font-extrabold text-[#16865E] uppercase">
-                {currentStudyType === 'opening' ? 'Treinador de Abertura' : 'Estudo Clássico'}
-              </span>
-              <h2 className="text-base font-extrabold text-[#2B261F]">{activeStudyTitle}</h2>
-            </div>
-
-            <div className="flex items-center gap-1.5 bg-[#F4EBD9] p-1 rounded-xl border border-[#E5D5BC]">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex p-0.5 rounded-[7px] bg-[#f4f6f8] border border-[#e6e8ea]">
               {(
                 [
-                  { id: 'w', label: '⚪ Brancas' },
-                  { id: 'b', label: '⚫ Pretas' },
-                  { id: 'both', label: '☯️ Ambas' },
+                  { id: 'w', label: 'Brancas' },
+                  { id: 'b', label: 'Pretas' },
+                  { id: 'both', label: 'Ambas' },
                 ] as const
               ).map((side) => (
                 <button
                   key={side.id}
                   onClick={() => {
                     setTrainerColor(side.id);
+                    setTrainerActive(true);
                     if (side.id === 'w') setFlipped(false);
                     if (side.id === 'b') setFlipped(true);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all ${
+                  className={`h-[26px] px-2.5 rounded-[5px] text-xs font-medium ${
                     trainerColor === side.id
-                      ? 'bg-[#16865E] text-white'
-                      : 'text-[#5C5245] hover:bg-[#FFF9ED]'
+                      ? 'bg-white text-[#131416] font-semibold'
+                      : 'text-[#5a5d60]'
                   }`}
                 >
                   {side.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Tabuleiro Central */}
-          <div className="my-2 flex items-center gap-3">
-            {experienceMode === 'explorador' && (
-              <div className="h-[460px]">
-                <VerticalEvaluationBar
-                  scoreCp={engineAnalysis.scoreCp}
-                  mateIn={engineAnalysis.mateIn}
-                  flipped={flipped}
-                />
-              </div>
-            )}
-            <div className="w-[460px] h-[460px] rounded-2xl p-2.5 bg-[#B58A65] shadow-md border-4 border-[#8C623E]">
-              <InteractiveChessboard
-                fen={activeFen}
-                flipped={flipped}
-                themeId={boardTheme}
-                onMove={handleBoardMove}
-              />
-            </div>
-          </div>
-
-          {/* Controles Essenciais: Anterior • Ver Dica • Próximo */}
-          <div className="w-full max-w-[640px] bg-[#FFFDF8] border-2 border-[#EADBC4] rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm">
-            <button
-              onClick={() => goToPly(currentPly - 1)}
-              disabled={currentPly === 0}
-              className="px-4 py-2 rounded-xl bg-[#F4EBD9] hover:bg-[#EADBC4] disabled:opacity-40 text-xs font-extrabold text-[#2B261F] flex items-center gap-1.5"
-            >
-              <ChevronLeft className="w-4 h-4" /> Anterior
-            </button>
 
             <button
-              onClick={() =>
-                setHintLevel((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : 1))
-              }
-              disabled={!nextExpectedStep}
-              className="px-5 py-2 rounded-xl bg-[#FFE5A8] hover:bg-[#FBD885] border border-[#F2C45A] text-xs font-extrabold text-[#664600] flex items-center gap-1.5 shadow-sm"
-            >
-              <Lightbulb className="w-4 h-4" /> 💡 Ver Dica{' '}
-              {hintLevel > 0 ? `(${hintLevel}/3)` : ''}
-            </button>
-
-            <button
-              onClick={() => goToPly(currentPly + 1)}
-              disabled={currentPly >= steps.length}
-              className="px-5 py-2 rounded-xl bg-[#16865E] hover:bg-[#126E4D] disabled:opacity-40 text-xs font-extrabold text-white flex items-center gap-1.5 shadow-sm"
-            >
-              Próximo <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </main>
-
-        {/* PAINEL DIREITO: FEEDBACK CONSTRUTIVO + 3 FONTES CLARAMENTE SEPARADAS */}
-        <aside className="w-96 shrink-0 bg-[#FFFDF8] border-l-2 border-[#EADBC4] p-4 overflow-y-auto space-y-3.5">
-          {/* Card de Feedback Construtivo */}
-          {lastFeedback && (
-            <div
-              className={`p-3.5 rounded-2xl border-2 ${
-                lastFeedback.tier === 'main'
-                  ? 'bg-[#DDF3E5] border-[#8CD4AE] text-[#0E5E40]'
-                  : lastFeedback.tier === 'plausible'
-                  ? 'bg-[#DCEBFF] border-[#96C2F7] text-[#184E88]'
-                  : 'bg-[#F9DCD9] border-[#E8A7A1] text-[#7D2923]'
+              onClick={() => setTrainerActive((t) => !t)}
+              className={`h-8 px-3 rounded-[6px] text-xs font-medium border ${
+                trainerActive
+                  ? 'bg-[#131416] text-white border-transparent'
+                  : 'bg-white text-[#131416] border-[#cdced1]'
               }`}
             >
-              <div className="text-xs font-extrabold mb-1">{lastFeedback.headlinePt}</div>
-              <p className="text-xs leading-relaxed">{lastFeedback.detailPt}</p>
-            </div>
-          )}
+              {trainerActive ? 'Treinador ativo' : 'Treinar lances'}
+            </button>
+          </div>
+        </div>
 
-          {/* Dicas Progressivas em 3 Níveis */}
-          {hintLevel > 0 && (
-            <div className="p-3.5 rounded-2xl bg-[#FFE5A8] border-2 border-[#F2C45A] text-[#593D00] space-y-1.5">
-              <div className="text-xs font-extrabold">
-                💡 Dica Nível {hintLevel} de 3
+        {/* WORKSPACE INTERNO DA FOLHA */}
+        <div className="flex-1 min-h-0 mt-4 grid grid-cols-[minmax(420px,1.08fr)_minmax(380px,0.92fr)] gap-4 overflow-hidden">
+          {/* PALCO DO TABULEIRO */}
+          <div className="bg-[#f4f6f8] border border-[#e6e8ea] rounded-[8px] p-4 flex flex-col justify-between min-h-0">
+            <div className="flex-1 flex items-center justify-center gap-3">
+              {experienceMode === 'explorador' && (
+                <div className="h-[420px]">
+                  <VerticalEvaluationBar
+                    scoreCp={engineAnalysis.scoreCp}
+                    mateIn={engineAnalysis.mateIn}
+                    flipped={flipped}
+                  />
+                </div>
+              )}
+              <div className="w-[420px] h-[420px] p-2 bg-[#27231f] rounded-[8px] border border-[#131416]">
+                <InteractiveChessboard
+                  fen={activeFen}
+                  flipped={flipped}
+                  themeId={boardTheme}
+                  onMove={handleBoardMove}
+                />
               </div>
-              {hintLevel >= 1 && <p className="text-xs">1️⃣ {progressiveHints.level1Question}</p>}
-              {hintLevel >= 2 && <p className="text-xs font-semibold">2️⃣ {progressiveHints.level2PieceAndPlan}</p>}
-              {hintLevel >= 3 && <p className="text-xs font-extrabold">3️⃣ {progressiveHints.level3MoveAndWhy}</p>}
             </div>
-          )}
 
-          {/* FONTE 1: 🦉 DO TUTOR */}
-          <div className="p-4 rounded-2xl bg-[#FFE5A8]/65 border-2 border-[#F2C45A]">
-            <div className="text-[11px] font-extrabold uppercase tracking-wider text-[#664600] mb-1">
-              🦉 Do Tutor (Explicação Amigável)
-            </div>
-            <p className="text-xs font-semibold text-[#3B2B08] leading-relaxed">
-              {currentStep?.annotation?.commentPt ||
-                (currentStudyType === 'opening'
-                  ? currentOpening.summaryPt
-                  : currentChapterAndGame.game.introPt)}
-            </p>
-          </div>
+            <div className="pt-3 border-t border-[#e6e8ea] flex items-center justify-between gap-2">
+              <button
+                onClick={() => goToPly(currentPly - 1)}
+                disabled={currentPly === 0}
+                className="h-8 px-3 rounded-[6px] border border-[#cdced1] bg-white text-xs font-medium disabled:opacity-40 flex items-center gap-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" /> Anterior
+              </button>
 
-          {/* FONTE 2: 📗 DO LIVRO (COM CITAÇÃO VERIFICADA) */}
-          <div className="p-4 rounded-2xl bg-[#DDF3E5] border-2 border-[#8CD4AE]">
-            <div className="text-[11px] font-extrabold uppercase tracking-wider text-[#0E5E40] mb-1">
-              📗 Do Livro (Fonte Histórica Verificada)
-            </div>
-            <p className="text-xs font-semibold text-[#134632] leading-relaxed mb-2">
-              {currentStep?.annotation?.commentOriginal ||
-                'Princípio clássico extraído e validado por motor de regras chess.js.'}
-            </p>
-            <div className="text-[11px] font-bold text-[#0E5E40] bg-white/70 px-2.5 py-1.5 rounded-xl border border-[#8CD4AE]">
-              📖 {bookCitation.bookTitle} • {bookCitation.author} • {bookCitation.chapterLabel} •{' '}
-              {bookCitation.pageEstimate}
+              <button
+                onClick={() => setHintLevel((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : 1))}
+                disabled={!nextExpectedStep}
+                className="h-8 px-3 rounded-[6px] border border-[#1b6c80] bg-white text-xs font-medium text-[#1b6c80] flex items-center gap-1.5"
+              >
+                <Lightbulb className="w-3.5 h-3.5" /> Ver dica {hintLevel > 0 ? `(${hintLevel}/3)` : ''}
+              </button>
+
+              <button
+                onClick={() => goToPly(currentPly + 1)}
+                disabled={currentPly >= steps.length}
+                className="h-8 px-3 rounded-[6px] bg-[#131416] text-white text-xs font-medium disabled:opacity-40 flex items-center gap-1"
+              >
+                Próximo <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* FONTE 3: 🤖 DO STOCKFISH */}
-          <div className="p-4 rounded-2xl bg-[#DCEBFF] border-2 border-[#96C2F7]">
-            <div className="text-[11px] font-extrabold uppercase tracking-wider text-[#184E88] mb-1">
-              🤖 Do Stockfish (Análise do Computador)
+          {/* COLUNA DE ORIENTAÇÃO & 3 FONTES SEPARADAS */}
+          <div className="overflow-y-auto space-y-3 pr-1">
+            {lastFeedback && (
+              <div className="p-3 rounded-[8px] border border-[#e6e8ea] bg-[#f4f6f8]">
+                <div className="text-xs font-semibold text-[#131416]">{lastFeedback.headlinePt}</div>
+                <p className="text-xs text-[#5a5d60] mt-1">{lastFeedback.detailPt}</p>
+              </div>
+            )}
+
+            {hintLevel > 0 && (
+              <div className="p-3.5 rounded-[8px] border border-[#f3d78b] bg-[#fffbeb] text-[#92400e] space-y-1 text-xs">
+                <div className="font-semibold">Dica progressiva · Nível {hintLevel} de 3</div>
+                {hintLevel >= 1 && <p>1. {progressiveHints.level1Question}</p>}
+                {hintLevel >= 2 && <p>2. {progressiveHints.level2PieceAndPlan}</p>}
+                {hintLevel >= 3 && <p className="font-semibold">3. {progressiveHints.level3MoveAndWhy}</p>}
+              </div>
+            )}
+
+            {/* FONTE 1: DO TUTOR */}
+            <div className="p-3.5 rounded-[8px] border border-[#e6e8ea] border-l-[3px] border-l-[#b87d14] bg-white">
+              <div className="text-xs font-semibold text-[#131416] flex items-center gap-1.5 mb-1">
+                <GraduationCap className="w-3.5 h-3.5" /> Do Tutor · Explicação guiada
+              </div>
+              <p className="text-[13.5px] leading-relaxed text-[#131416]">
+                {currentStep?.annotation?.commentPt ||
+                  (currentStudyType === 'opening'
+                    ? currentOpening.summaryPt
+                    : currentChapterAndGame.game.introPt)}
+              </p>
             </div>
-            <p className="text-xs font-semibold text-[#163C66] leading-relaxed">
-              Melhor sugestão: <strong>{sanToPortugueseAlgebraic(engineAnalysis.bestMoveSan)}</strong>.{' '}
-              {engineAnalysis.explanationPt}
-            </p>
-            <p className="text-[10px] text-[#356294] mt-1 font-medium">
-              *Análise gerada por motor tático, separada da opinião do autor do livro.
-            </p>
+
+            {/* FONTE 2: DO LIVRO */}
+            <div className="p-3.5 rounded-[8px] border border-[#e6e8ea] border-l-[3px] border-l-[#1e7b4f] bg-white">
+              <div className="text-xs font-semibold text-[#131416] flex items-center gap-1.5 mb-1">
+                <BookOpen className="w-3.5 h-3.5" /> Do Livro · Fonte histórica verificada
+              </div>
+              <p className="text-[13.5px] leading-relaxed text-[#131416] mb-2">
+                {currentStep?.annotation?.commentOriginal ||
+                  'Princípio clássico extraído e validado pelo motor de regras chess.js.'}
+              </p>
+              <div className="pt-2 border-t border-[#f0f1f2] text-[12px] text-[#5a5d60]">
+                {bookCitation.bookTitle} · {bookCitation.author} · {bookCitation.chapterLabel} (
+                {bookCitation.pageEstimate})
+              </div>
+            </div>
+
+            {/* FONTE 3: DO STOCKFISH */}
+            <div className="p-3.5 rounded-[8px] border border-[#e6e8ea] border-l-[3px] border-l-[#1b6c80] bg-white">
+              <div className="text-xs font-semibold text-[#131416] flex items-center gap-1.5 mb-1">
+                <Cpu className="w-3.5 h-3.5" /> Do Stockfish · Análise independente do computador
+              </div>
+              <p className="text-[13.5px] leading-relaxed text-[#131416]">
+                Melhor sugestão:{' '}
+                <strong className="font-mono">
+                  {sanToPortugueseAlgebraic(engineAnalysis.bestMoveSan)}
+                </strong>
+                . {engineAnalysis.explanationPt}
+              </p>
+            </div>
           </div>
-        </aside>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

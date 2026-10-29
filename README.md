@@ -1,31 +1,30 @@
-# ♞ Chess Mastery — Academia Lúdica & Treinador Inteligente de Aberturas (v1.2.0)
+# Chess Mastery — Estúdio Clássico & Treinador de Aberturas (v1.3.0)
 
-Aplicativo nativo macOS (`arm64` Apple Silicon) com **Redesign Infantil em Tons Claros** e **Treinador Inteligente de Aberturas**, projetado para transformar o estudo de clássicos do xadrez e aberturas em uma experiência acolhedora, tátil e guiada.
+Aplicativo nativo macOS (`arm64` Apple Silicon) desenhado com a arquitetura **`Framed Sheet` (`taste-skill` v2.1)** para o estudo guiado de clássicos do xadrez e o treinamento inteligente de aberturas.
 
 Consulte a documentação completa em **[DOCUMENTACAO.md](file:///Volumes/Backup/antigravity01/Chess%20Mastery/DOCUMENTACAO.md)**.
 
 ---
 
-## ✨ Destaques da Versão 1.2.0
+## Destaques da Versão 1.3.0 (`taste-skill` Framed Sheet)
 
-- 🎨 **Paleta Clara e Acolhedora**: Creme (`#FFF9ED`), Verde Menta (`#DDF3E5`), Verde Principal (`#16865E`), Azul Céu (`#DCEBFF`), Amarelo Suave (`#FFE5A8`), Coral Suave (`#F9DCD9`) e Tabuleiro em Madeira (`#B58A65` / `#F5E6CE`).
-- 🧭 **4 Destinos de Navegação**: `🌟 Aprender` • `📚 Biblioteca` • `♟️ Aberturas` • `🏆 Conquistas`.
-- 🌱 **Dois Modos de Uso**:
-  - **Modo Aprender (Padrão)**: Tabuleiro dominante, uma tarefa por vez, dicas progressivas em 3 níveis e controles essenciais (`◀ Anterior`, `💡 Ver Dica`, `Próximo ▶`).
-  - **Modo Explorador (Opcional)**: Barra vertical de avaliação Stockfish, seletor de 5 notações (`Algébrica PT`, `Figurino`, `Descritiva C3BR`, `Descritiva ES C3AR`, `SAN`) e planilha completa de lances.
-- ♟️ **Treinador Inteligente de Aberturas**:
-  - Escolha da abertura e da cor (`⚪ Brancas`, `⚫ Pretas`, `☯️ Ambas`) com resposta automática do oponente.
-  - Feedback construtivo em 3 níveis (**Lance Teórico Principal**, **Alternativa Plausível**, **Alerta Construtivo**).
-  - **Dicas Progressivas em 3 Níveis** (`1: Pergunta` → `2: Peça/Casa` → `3: Solução Explicada`).
-  - **Fila de Revisão Inteligente** automática para posições que precisaram de dica ou nova tentativa.
-- 🦉📗🤖 **Três Fontes de Orientação Separadas**:
-  - `🦉 Do Tutor`: Explicação pedagógica amigável.
-  - `📗 Do Livro`: Princípio clássico com citação explícita de **Livro • Autor • Capítulo • Página** + modal `🔎 Fontes & OCR`.
-  - `🤖 Do Stockfish`: Análise independente do computador claramente rotulada.
+- **Shell & Estilo `Framed Sheet` (`taste-skill` v2.1)**:
+  - Moldura em **L** contínua (`--ground: #f4f6f5`) unindo a barra lateral esquerda (`248px`) e a barra superior (`48px`) sem linha divisória entre elas.
+  - Área de estudo sobre uma **folha branca (`--surface: #ffffff`)** recuada `8px` das bordas direita e inferior, com `border-radius: 16px`, borda hairline de `1px solid #e6e8ea` e zero sombra.
+  - Tipografia `IBM Plex Sans` + `IBM Plex Mono` (`tabular-nums`) para códigos ECO, coordenadas e lances, com ícones vetoriais de `1.5px stroke` (sem emojis) e abas com sublinhado de `2px`.
+- **4 Destinos Principais na Moldura Lateral**:
+  - `Aprender e revisar` (com contador ativo da Fila de Revisão) · `Biblioteca de livros` (`4 livros`) · `Aberturas e defesas` (`18 linhas`) · `Progresso e acervo`.
+- **Acordeão de Livros e Modo Isolado de Capítulos**:
+  - Todos os 4 livros clássicos (*Xadrez Básico*, *Meu Sistema*, *Mikhail Tal*, *Bobby Fischer*) acessíveis simultaneamente na barra lateral esquerda, com abertura de capítulos em modo isolado.
+- **Dois Modos de Uso (`Modo Aprender` vs. `Modo Explorador`)**:
+  - **Modo Aprender (Padrão)**: Foco limpo no tabuleiro, uma tarefa por vez e dicas progressivas em 3 níveis.
+  - **Modo Explorador (Opcional)**: Ativa barra de avaliação vertical do Stockfish e seletor das 5 notações (`Algébrica PT`, `Figurino`, `Descritiva C3BR`, `Espanhol C3AR`, `SAN`).
+- **Treinador Inteligente de Aberturas & 3 Fontes Separadas**:
+  - Treino por cor (`Brancas`, `Pretas`, `Ambas`), feedback construtivo em 3 faixas, dicas progressivas em 3 níveis e separação clara entre **Do Tutor**, **Do Livro** (com citação de Livro, Autor, Capítulo e Página + modal de Pipeline OCR) e **Do Stockfish**.
 
 ---
 
-## 🚀 Como Compilar e Gerar o `.dmg`
+## Como Compilar e Gerar o `.dmg`
 
 ```bash
 ./build_and_move.sh

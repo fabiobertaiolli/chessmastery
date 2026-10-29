@@ -28,9 +28,9 @@
                                               styleMask:style
                                                 backing:NSBackingStoreBuffered
                                                   defer:NO];
-    [self.window setTitle:@"Chess Mastery — Academia Lúdica & Treinador Inteligente de Aberturas"];
+    [self.window setTitle:@"Chess Mastery — Estúdio Clássico & Treinador de Aberturas"];
     [self.window setMinSize:NSMakeSize(1120, 740)];
-    [self.window setBackgroundColor:[NSColor colorWithSRGBRed:1.0 green:0.976 blue:0.929 alpha:1.0]];
+    [self.window setBackgroundColor:[NSColor colorWithSRGBRed:0.957 green:0.965 blue:0.961 alpha:1.0]];
     [self.window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameAqua]];
 
     WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];

@@ -1,916 +1,1140 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chess Mastery — Aventura de Aprendizagem & Treinador de Aberturas</title>
+  <title>Chess Mastery — Estúdio Clássico & Treinador de Aberturas</title>
   <style>
+    /* ==========================================================================
+       TASTE-SKILL v2.1 — STYLE & SHELL: FRAMED-SHEET (Light)
+       "The app chrome is one tinted L-shaped frame; the work sits on a white sheet
+        with a hairline edge and soft corners, so depth comes from a single tone
+        step and no shadow."
+       ========================================================================== */
     :root {
-      /* PALETA OFICIAL DO CONCEITO DE REDESIGN */
-      --bg-cream: #FFF9ED;
-      --bg-cream-elevated: #FFFFFF;
-      --bg-cream-subtle: #F7EFE0;
-      --mint-bg: #DDF3E5;
-      --mint-border: #A8DEC0;
-      --mint-text: #0F5338;
-      --green-primary: #16865E;
-      --green-hover: #116B4B;
-      --sky-bg: #DCEBFF;
-      --sky-border: #A6CAFA;
-      --sky-text: #15457D;
-      --yellow-bg: #FFE5A8;
-      --yellow-border: #F2C45A;
-      --yellow-text: #684805;
-      --coral-bg: #F9DCD9;
-      --coral-border: #EDA8A3;
-      --coral-text: #7D231C;
-      --wood-dark: #B58A65;
-      --wood-light: #F3E4CC;
-      --text-primary: #1D2B24;
-      --text-secondary: #4A5D53;
-      --text-muted: #72857B;
-      --border-soft: #E6DEC8;
-      --shadow-card: 0 8px 24px rgba(29, 43, 36, 0.06);
-      --shadow-board: 0 18px 42px rgba(92, 64, 38, 0.18);
+      /* Tokens oficiais do estilo framed-sheet (library/app.json + assets/app.css) */
+      --ground: #f4f6f5;          /* Moldura em L (sidebar + topbar) com leve matiz pedra/sálvia */
+      --surface: #ffffff;         /* Folha branca principal e painéis internos */
+      --raised: #f4f6f8;          /* Superfície interna preenchida e hover de linhas */
+      --active: #e8ecea;          /* Pílula neutra do item ativo na navegação */
+      --border: #e6e8ea;          /* Borda de 1px (~1.2:1 sobre branco, nunca pesada) */
+      --rule: #f0f1f2;            /* Regras horizontais entre linhas de listas e tabelas */
+      --control: #cdced1;         /* Borda de inputs e botões (1 passo mais forte) */
+      --text: #131416;            /* Tinta principal */
+      --muted: #5a5d60;           /* Texto secundário (contraste >= 4.5:1) */
+      --faint: #686b6e;           /* Metadados e placeholders (contraste >= 4.5:1) */
+
+      /* Orçamento de cor <= 3%: 1 matiz principal para dados/seleção */
+      --accent: #1b6c80;          /* Teal analítico do framed-sheet (3:1+ sobre branco) */
+      --accent-soft: #e6f2f5;
+      --primary: #131416;         /* Botão primário em quase-preto tinta */
+      --primary-ink: #ffffff;
+
+      /* Polaridade semântica e pílulas tonais (fundo pálido + tinta escura do mesmo matiz) */
+      --positive: #1e7b4f;
+      --negative: #c4242a;
+      --warning: #92400e;
+      --pill-positive-bg: #dcfae5;
+      --pill-positive-ink: #04250e;
+      --pill-negative-bg: #ffedea;
+      --pill-negative-ink: #831c1e;
+      --pill-warning-bg: #fffbeb;
+      --pill-warning-ink: #92400e;
+      --pill-neutral-bg: #ebedee;
+      --pill-neutral-ink: #353736;
+      --pill-info-bg: #e6f2f5;
+      --pill-info-ink: #0f4452;
+
+      /* Cores do tabuleiro (único elemento de alta cromia material na folha) */
+      --board-light: #f3ead8;
+      --board-dark: #b58b63;
+      --board-frame: #27231f;
+
+      /* Geometria bimodal do framed-sheet */
+      --sheet-inset: 8px;
+      --radius-sheet: 16px;
+      --radius-card: 8px;
+      --radius-control: 6px;
+
+      /* Dimensões estruturais do shell framed-sheet */
+      --sidebar-width: 248px;
+      --topbar-height: 48px;
+      --pad: 24px;
+      --gap: 16px;
+      --card-pad: 18px;
+      --control-height: 32px;
+      --row-height: 44px;
+      --nav-row: 32px;
+
+      /* Tipografia: IBM Plex Sans + IBM Plex Mono (apenas IDs, ECO e lances) */
+      --font: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+      --fs-title: 22px;
+      --fs-section: 16px;
+      --fs-kpi: 26px;
+      --fs-body: 14px;
+      --fs-small: 12px;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --t-press: 120ms;
+      --t-hover: 150ms;
+      --t-ui: 200ms;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Display", "Nunito", "Segoe UI", sans-serif;
-      background: var(--bg-cream);
-      color: var(--text-primary);
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
       height: 100vh;
       overflow: hidden;
-      user-select: none;
+      background: var(--ground);
+      color: var(--text);
+      font: 400 var(--fs-body)/20px var(--font);
       -webkit-font-smoothing: antialiased;
+      user-select: none;
     }
 
-    /* SCROLLBARS SUAVES */
-    ::-webkit-scrollbar { width: 7px; height: 7px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #D5CBB4; border-radius: 99px; }
-    ::-webkit-scrollbar-thumb:hover { background: #B8AA8E; }
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
 
-    .app-shell {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    .num, .mono, table, .kpi-value, .move-cell, .eco-code {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #d5d8da;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #b8bcc0;
+    }
+
+    /* ==========================================================================
+       SHELL FRAMED-SHEET:
+       Sidebar (248px) e Topbar (48px) compartilham --ground sem linha divisória
+       entre eles, formando um L contínuo. A folha branca (.work-sheet) fica
+       recuada 8px das bordas direita e inferior com raio de 16px e borda de 1px.
+       ========================================================================== */
+    .framed-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      grid-template-rows: var(--topbar-height) minmax(0, 1fr);
       width: 100vw;
-      background: var(--bg-cream);
+      height: 100vh;
+      background: var(--ground);
     }
 
-    /* CABEÇALHO SIMPLES E PREVISÍVEL */
-    .top-bar {
-      height: 64px;
-      padding: 0 20px;
-      background: #FFFFFF;
-      border-bottom: 2px solid var(--border-soft);
+    /* Canto superior esquerdo da moldura L: Marca do Produto + Escopo */
+    .shell-brand {
+      grid-column: 1;
+      grid-row: 1;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      z-index: 40;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      padding: 0 14px;
+      background: var(--ground);
+      /* Sem borda entre sidebar e topbar (regra estrita do framed-sheet) */
     }
 
-    .brand-group { display: flex; align-items: center; gap: 14px; }
-    .brand-btn {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--mint-bg);
-      border: 2px solid var(--mint-border);
-      padding: 6px 14px; border-radius: 16px;
-      color: var(--text-primary); cursor: pointer; text-align: left;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .brand-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22, 134, 94, 0.14); }
-    .brand-icon { width: 32px; height: 32px; border-radius: 10px; object-fit: cover; }
-    .brand-title { font-size: 15px; font-weight: 800; color: var(--mint-text); letter-spacing: -0.01em; }
-    .brand-sub { font-size: 11px; color: var(--green-primary); font-weight: 700; }
-
-    /* NAVEGAÇÃO PRINCIPAL: APRENDER • BIBLIOTECA • ABERTURAS • CONQUISTAS */
-    .main-nav {
-      display: flex;
-      background: var(--bg-cream-subtle);
-      padding: 4px;
-      border-radius: 16px;
-      border: 1.5px solid var(--border-soft);
-      gap: 4px;
-    }
-    .nav-pill {
-      padding: 7px 15px;
-      border-radius: 12px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      transition: all 0.18s ease;
-    }
-    .nav-pill:hover {
-      background: rgba(255, 255, 255, 0.7);
-      color: var(--text-primary);
-    }
-    .nav-pill.active {
-      background: var(--green-primary);
-      color: #FFFFFF;
-      box-shadow: 0 3px 10px rgba(22, 134, 94, 0.25);
-    }
-    .nav-badge {
-      font-size: 11px;
-      padding: 1px 7px;
-      border-radius: 99px;
-      background: rgba(255, 255, 255, 0.22);
-      color: inherit;
-      font-weight: 800;
-    }
-    .nav-pill:not(.active) .nav-badge {
-      background: #E5DEC9;
-      color: var(--text-secondary);
-    }
-
-    /* DIREITA DO CABEÇALHO: ESTRELAS + ALTERNADOR MODO APRENDER / EXPLORADOR */
-    .header-right {
+    .brand-lockup {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
-    .stars-pill {
+
+    .brand-mark {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #ffffff;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 99px;
-      background: var(--yellow-bg);
-      border: 1.5px solid var(--yellow-border);
-      color: var(--yellow-text);
-      font-size: 13px;
-      font-weight: 800;
-    }
-    .mode-switch-group {
-      display: flex;
-      background: var(--bg-cream-subtle);
-      padding: 3px;
-      border-radius: 14px;
-      border: 1.5px solid var(--border-soft);
-      gap: 3px;
-    }
-    .mode-switch-btn {
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .mode-switch-btn.active-learn {
-      background: var(--mint-bg);
-      color: var(--mint-text);
-      border: 1px solid var(--mint-border);
-    }
-    .mode-switch-btn.active-explorer {
-      background: var(--sky-bg);
-      color: var(--sky-text);
-      border: 1px solid var(--sky-border);
+      justify-content: center;
+      flex-shrink: 0;
     }
 
-    /* LAYOUT PRINCIPAL DE 3 COLUNAS COM TABULEIRO DOMINANTE */
-    .workspace-grid {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 320px 1fr 390px;
-      gap: 16px;
-      padding: 14px 20px 16px;
-    }
-    @media (max-width: 1180px) {
-      .workspace-grid {
-        grid-template-columns: 280px 1fr 340px;
-        gap: 12px;
-        padding: 10px 14px;
-      }
+    .brand-mark svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 1.75;
     }
 
-    /* PAINÉIS LATERAIS TÁTEIS */
-    .side-card {
-      background: var(--bg-cream-elevated);
-      border: 2px solid var(--border-soft);
-      border-radius: 24px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      box-shadow: var(--shadow-card);
-    }
-
-    /* BUSCA E FILTROS NA BARRA LATERAL */
-    .search-wrap {
-      position: relative;
-      margin-bottom: 10px;
-    }
-    .search-input {
-      width: 100%;
-      padding: 9px 12px 9px 34px;
-      border-radius: 14px;
-      background: var(--bg-cream);
-      border: 1.5px solid var(--border-soft);
-      color: var(--text-primary);
-      font-size: 12.5px;
+    .brand-name {
+      font-size: 14px;
       font-weight: 600;
-      outline: none;
-      transition: border-color 0.2s;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
     }
-    .search-input:focus {
-      border-color: var(--green-primary);
+
+    .brand-scope {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--active);
+      font-family: var(--font-mono);
     }
-    .search-icon {
+
+    /* Barra Superior (48px) sobre o mesmo --ground da moldura L */
+    .shell-topbar {
+      grid-column: 2;
+      grid-row: 1;
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 16px 0 8px;
+      background: var(--ground);
+    }
+
+    /* Busca centralizada na janela (548x32 com dica de atalho conforme blueprint) */
+    .topbar-search-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+
+    .topbar-search-wrap svg {
       position: absolute;
-      left: 11px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 13px;
-      color: var(--text-muted);
+      left: 10px;
+      width: 14px;
+      height: 14px;
+      color: var(--muted);
       pointer-events: none;
     }
 
-    .side-scroll {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-right: 4px;
+    .topbar-search {
+      width: 100%;
+      height: 32px;
+      padding: 0 56px 0 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-control);
+      font-size: 13px;
+      color: var(--text);
+      transition: border-color var(--t-hover) ease;
     }
 
-    /* CARTÕES DE LIVRO (ACORDEÃO NA BARRA ESQUERDA) */
-    .book-accordion {
-      background: var(--bg-cream);
-      border: 1.5px solid var(--border-soft);
-      border-radius: 18px;
+    .topbar-search::placeholder {
+      color: var(--faint);
+    }
+
+    .topbar-search:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .search-kbd {
+      position: absolute;
+      right: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--faint);
+      background: var(--ground);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      line-height: 1.2;
+      pointer-events: none;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Sidebar Esquerda (248px) sobre o mesmo --ground da moldura L */
+    .shell-sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 12px 14px;
+      background: var(--ground);
       overflow: hidden;
-      transition: all 0.18s ease;
     }
-    .book-accordion.active {
-      border-color: var(--green-primary);
-      background: #F6FBF8;
+
+    .sidebar-nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 12px;
     }
-    .book-acc-header {
-      padding: 11px 13px;
-      cursor: pointer;
+
+    .group-label {
+      margin: 10px 8px 4px;
+      font-size: var(--fs-small);
+      font-weight: 400;
+      color: var(--faint);
+    }
+
+    .nav-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-    }
-    .book-acc-header:hover {
-      background: rgba(22, 134, 94, 0.05);
-    }
-    .book-acc-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
-    }
-    .book-badge-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 11px;
-      background: var(--mint-bg);
-      border: 1.5px solid var(--mint-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-    .book-acc-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .book-acc-sub {
-      font-size: 11px;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 1px;
-    }
-    .chap-pill-count {
-      font-size: 10.5px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 99px;
-      background: var(--mint-bg);
-      color: var(--mint-text);
-      flex-shrink: 0;
+      height: var(--nav-row);
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color var(--t-hover) ease, color var(--t-hover) ease;
     }
 
-    .chapters-drawer {
-      padding: 6px 10px 10px;
-      border-top: 1.5px solid var(--border-soft);
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .nav-item svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      stroke-width: 1.5;
+      color: var(--muted);
+    }
+
+    .nav-item:hover {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .nav-item[aria-current="page"] {
+      background: var(--active);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .nav-item[aria-current="page"] svg {
+      color: var(--text);
+    }
+
+    .nav-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-count.urgent {
+      background: var(--pill-warning-bg);
+      color: var(--pill-warning-ink);
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    /* Lista contextual dentro da Sidebar (Acordeão de Livros / Capítulos / Aberturas) */
+    .sidebar-catalog {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
     }
-    .chapter-btn {
+
+    .sidebar-footer {
+      padding-top: 10px;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Acordeão de Livro na Sidebar (sem sombras, 1px border sutil) */
+    .book-accordion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+
+    .book-accordion.active {
+      border-color: #c5d4d8;
+    }
+
+    .book-header-btn {
       width: 100%;
+      padding: 10px 11px;
+      background: transparent;
+      border: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
       text-align: left;
-      padding: 9px 11px;
-      border-radius: 13px;
-      background: var(--bg-cream);
-      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: background-color var(--t-hover) ease;
+    }
+
+    .book-header-btn:hover {
+      background: var(--raised);
+    }
+
+    .book-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .book-author {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .book-chapters-list {
+      border-top: 1px solid var(--rule);
+      padding: 6px;
+      background: #fafbfb;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .chapter-row-btn {
+      width: 100%;
+      padding: 7px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: var(--surface);
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      transition: background-color var(--t-hover) ease, border-color var(--t-hover) ease;
+    }
+
+    .chapter-row-btn:hover {
+      background: var(--raised);
+      border-color: var(--border);
+    }
+
+    .chapter-row-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .chapter-row-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .game-item-btn {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 6px;
+      border: 0;
+      background: transparent;
+      text-align: left;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      transition: all 0.15s ease;
-    }
-    .chapter-btn:hover {
-      border-color: var(--mint-border);
-      background: var(--mint-bg);
-    }
-    .chapter-btn.active {
-      background: var(--mint-bg);
-      border-color: var(--green-primary);
-    }
-    .chap-eyebrow {
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-      color: var(--green-primary);
-      letter-spacing: 0.04em;
-    }
-    .chap-name {
       font-size: 12px;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-top: 2px;
+      color: var(--muted);
+      transition: background-color var(--t-hover) ease, color var(--t-hover) ease;
     }
-    .isolate-pill {
-      font-size: 10.5px;
-      font-weight: 800;
-      padding: 4px 8px;
-      border-radius: 9px;
-      background: var(--green-primary);
-      color: #FFFFFF;
+
+    .game-item-btn:hover {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .game-item-btn.selected {
+      background: var(--active);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       A FOLHA BRANCA (.work-sheet):
+       Encaixada a 8px das bordas direita e inferior, raio de 16px, borda 1px,
+       sem sombra.
+       ========================================================================== */
+    .work-sheet {
+      grid-column: 2;
+      grid-row: 2;
+      margin: 0 var(--sheet-inset) var(--sheet-inset) 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sheet);
+      padding: var(--pad);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Linha de Título da Folha (Title Row conforme app.css) */
+    .sheet-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
 
-    /* VISÃO DE CAPÍTULO ISOLADO */
-    .isolated-box {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      gap: 10px;
-      min-height: 0;
+    .sheet-title-main h1 {
+      font-size: var(--fs-title);
+      line-height: 1.25;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
     }
-    .back-btn {
+
+    .sheet-finding {
+      margin-top: 3px;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sheet-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    /* Faixa de KPIs dividida por 1px (sem ícones, valor em 400, label em 500) */
+    .kpis {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      flex-shrink: 0;
+    }
+
+    .kpi {
+      padding: 10px 16px;
+    }
+
+    .kpi + .kpi {
+      border-left: 1px solid var(--border);
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .kpi-value {
+      margin-top: 3px;
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .kpi-value small {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-left: 3px;
+    }
+
+    /* Layout interno da folha: Palco do Tabuleiro + Coluna Direita de Orientação */
+    .sheet-workspace {
+      flex: 1;
+      min-height: 0;
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: minmax(420px, 1.08fr) minmax(380px, 0.92fr);
+      gap: var(--gap);
+      overflow: hidden;
+    }
+
+    /* Painel Padrão (1px border, radius 8px, sem sombra) */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: var(--card-pad);
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-header h2 {
+      font-size: var(--fs-section);
+      line-height: 1.3;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .panel-meta {
+      font-size: var(--fs-small);
+      color: var(--faint);
+    }
+
+    /* Abas do Framed-Sheet: sublinhado de 2px em tinta ou no acento */
+    .tabs {
+      display: flex;
+      gap: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      position: relative;
+      padding: 8px 0 9px;
+      border: 0;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color var(--t-hover) ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn[aria-selected="true"] {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .tab-btn[aria-selected="true"]::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    /* Controles e Botões (height: 32px, radius: 6px, sem gradiente/sombra) */
+    .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 12px;
-      border-radius: 12px;
-      border: 1.5px solid var(--border-soft);
-      background: var(--bg-cream);
-      color: var(--green-primary);
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .back-btn:hover {
-      background: var(--mint-bg);
-      border-color: var(--mint-border);
-    }
-    .isolated-hero {
-      padding: 13px;
-      border-radius: 18px;
-      background: var(--mint-bg);
-      border: 2px solid var(--mint-border);
-    }
-    .isolated-hero h3 {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--mint-text);
-      margin: 4px 0;
-    }
-    .isolated-hero p {
-      font-size: 11.5px;
-      color: var(--text-secondary);
-      line-height: 1.45;
-    }
-
-    /* CARTÕES DE MISSÃO / PARTIDA / ABERTURA */
-    .mission-card {
-      width: 100%;
-      text-align: left;
-      padding: 11px 13px;
-      border-radius: 16px;
-      background: var(--bg-cream);
-      border: 2px solid var(--border-soft);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      transition: all 0.16s ease;
-    }
-    .mission-card:hover {
-      border-color: var(--green-primary);
-      transform: translateY(-1px);
-    }
-    .mission-card.active {
-      background: var(--mint-bg);
-      border-color: var(--green-primary);
-      box-shadow: 0 4px 12px rgba(22, 134, 94, 0.12);
-    }
-    .mission-card.completed {
-      background: #F2FBF5;
-    }
-    .mc-title {
-      font-size: 12.5px;
-      font-weight: 800;
-      color: var(--text-primary);
-    }
-    .mc-sub {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 2px;
-    }
-    .mc-tag {
-      display: inline-block;
-      margin-top: 5px;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: var(--sky-bg);
-      color: var(--sky-text);
-    }
-    .done-star {
-      width: 26px;
-      height: 26px;
-      border-radius: 99px;
-      background: var(--green-primary);
-      color: #FFFFFF;
-      display: flex;
-      align-items: center;
       justify-content: center;
+      gap: 6px;
+      height: var(--control-height);
+      padding: 0 12px;
+      border-radius: var(--radius-control);
+      border: 1px solid var(--control);
+      background: var(--surface);
       font-size: 13px;
-      font-weight: 900;
-      flex-shrink: 0;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color var(--t-hover) ease, transform var(--t-press) var(--ease-out);
     }
 
-    /* ARENA CENTRAL: MISSÃO + TABULEIRO DOMINANTE + CONTROLES SIMPLES */
-    .center-arena {
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 1.6;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--raised);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: var(--primary-ink);
+      border-color: transparent;
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      background: #27292c;
+    }
+
+    .btn.accent-outline {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--surface);
+    }
+
+    .btn.accent-outline:hover:not(:disabled) {
+      background: var(--accent-soft);
+    }
+
+    .btn.ghost {
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .btn.ghost:hover:not(:disabled) {
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    /* Segmented Control (app.css) */
+    .segmented {
+      display: inline-flex;
+      width: max-content;
+      max-width: 100%;
+      padding: 2px;
+      border-radius: 7px;
+      background: var(--raised);
+      border: 1px solid var(--border);
+    }
+
+    .segmented button {
+      height: 26px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background-color var(--t-hover) ease, color var(--t-hover) ease;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Pílulas semânticas (app.css) */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--pill-neutral-bg);
+      color: var(--pill-neutral-ink);
+      white-space: nowrap;
+    }
+    .pill.pos { background: var(--pill-positive-bg); color: var(--pill-positive-ink); }
+    .pill.neg { background: var(--pill-negative-bg); color: var(--pill-negative-ink); }
+    .pill.warn { background: var(--pill-warning-bg); color: var(--pill-warning-ink); }
+    .pill.info { background: var(--pill-info-bg); color: var(--pill-info-ink); }
+
+    /* ==========================================================================
+       PALCO DO TABULEIRO (Coluna Esquerda da Folha)
+       ========================================================================== */
+    .board-stage-column {
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: space-between;
       min-height: 0;
-      gap: 8px;
+      background: var(--raised);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 14px 16px;
     }
 
-    /* CARTÃO DA MISSÃO ATUAL NO TOPO DO TABULEIRO */
-    .mission-banner {
-      width: 100%;
-      max-width: 580px;
-      padding: 10px 16px;
-      border-radius: 18px;
-      background: #FFFFFF;
-      border: 2px solid var(--border-soft);
+    .board-stage-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      box-shadow: var(--shadow-card);
-    }
-    .mb-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-    }
-    .mb-step-pill {
-      padding: 4px 10px;
-      border-radius: 99px;
-      background: var(--mint-bg);
-      color: var(--mint-text);
-      font-size: 11px;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-    .mb-title {
-      font-size: 13.5px;
-      font-weight: 800;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .mb-sub {
-      font-size: 11.5px;
-      color: var(--text-secondary);
+      margin-bottom: 8px;
     }
 
-    /* TABULEIRO DE MADEIRA CLARA (ELEMENTO DOMINANTE) */
-    .board-stage {
+    .board-center-wrap {
+      flex: 1;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      margin: auto 0;
+      padding: 4px 0;
     }
 
+    /* Barra de Avaliação Vertical (Modo Explorador) */
     .eval-bar {
-      width: 22px;
-      height: min(60vh, 510px);
-      border-radius: 99px;
-      overflow: hidden;
-      border: 2px solid var(--wood-dark);
+      width: 20px;
+      height: min(50vh, 430px);
+      background: #232527;
+      border: 1px solid var(--control);
+      border-radius: 4px;
       position: relative;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      background: #FFFFFF;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
     }
-    .eval-black { background: #374151; transition: height 0.35s ease; }
-    .eval-white { background: #FFFDF9; transition: height 0.35s ease; }
-    .eval-score {
+
+    .eval-bar-white {
+      width: 100%;
+      background: #f5f6f7;
+      transition: height 280ms var(--ease-out);
+    }
+
+    .eval-score-tag {
       position: absolute;
-      bottom: 6px;
       left: 0;
       right: 0;
       text-align: center;
+      font-family: var(--font-mono);
       font-size: 9px;
-      font-weight: 900;
-      color: var(--text-primary);
+      font-weight: 600;
+      line-height: 1;
     }
 
+    /* Tabuleiro de Xadrez Tátil */
     .board-frame {
-      padding: 10px;
-      border-radius: 24px;
-      background: linear-gradient(145deg, #C69C72, #9E734D);
-      border: 2px solid #845D3B;
-      box-shadow: var(--shadow-board);
+      padding: 8px;
+      background: var(--board-frame);
+      border-radius: var(--radius-card);
+      border: 1px solid #131416;
     }
-    .board-grid {
-      width: min(60vh, 510px);
-      height: min(60vh, 510px);
+
+    .chess-board {
+      width: min(50vh, 430px);
+      height: min(50vh, 430px);
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      border-radius: 14px;
-      overflow: hidden;
       position: relative;
-      border: 2px solid #734F30;
+      border-radius: 3px;
+      overflow: hidden;
     }
 
-    .board-sq {
+    .chess-square {
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
     }
-    .clickable-piece { cursor: pointer; }
-    .piece-wrap {
-      width: 86%;
-      height: 86%;
-      z-index: 5;
+
+    .chess-piece {
+      width: 84%;
+      height: 84%;
       pointer-events: none;
-      transition: transform 0.12s ease;
+      transition: transform 120ms var(--ease-out);
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.22));
     }
-    .piece-svg {
-      width: 100%;
-      height: 100%;
-      filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
+
+    .chess-square:hover .chess-piece {
+      transform: translateY(-1px);
     }
-    .sq-selected {
+
+    .coord-label {
       position: absolute;
-      inset: 0;
-      background: rgba(22, 134, 94, 0.38);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 1;
       pointer-events: none;
+      opacity: 0.82;
     }
-    .sq-hl { position: absolute; inset: 0; pointer-events: none; }
-    .sq-hl-emerald { background: rgba(22, 134, 94, 0.42); }
-    .sq-hl-amber { background: rgba(245, 158, 11, 0.48); }
-    .sq-hl-sky { background: rgba(14, 165, 233, 0.42); }
-    .sq-hl-rose { background: rgba(239, 68, 68, 0.42); }
-    .sq-check {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle, rgba(239, 68, 68, 0.78) 0%, transparent 75%);
-      pointer-events: none;
-    }
-    .coord-rank {
-      position: absolute;
-      top: 3px;
-      left: 5px;
-      font-size: 10.5px;
-      font-weight: 800;
-      pointer-events: none;
-    }
-    .coord-file {
-      position: absolute;
-      bottom: 3px;
-      right: 5px;
-      font-size: 10.5px;
-      font-weight: 800;
-      pointer-events: none;
-    }
+
     .legal-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 99px;
-      background: rgba(22, 134, 94, 0.45);
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      z-index: 6;
+      width: 26%;
+      height: 26%;
+      border-radius: 50%;
+      background: rgba(27, 108, 128, 0.55);
       pointer-events: none;
     }
+
     .legal-ring {
       position: absolute;
-      inset: 4px;
-      border-radius: 99px;
-      border: 5px solid rgba(22, 134, 94, 0.55);
-      z-index: 6;
+      inset: 5%;
+      border-radius: 50%;
+      border: 3px solid rgba(27, 108, 128, 0.65);
       pointer-events: none;
     }
-    .move-badge {
-      position: absolute;
-      top: 3px;
-      right: 3px;
-      z-index: 12;
-      padding: 1px 6px;
-      height: 20px;
-      border-radius: 99px;
-      background: var(--green-primary);
-      color: #FFFFFF;
-      font-size: 10px;
-      font-weight: 900;
+
+    /* Barra de Progresso e Controles Essenciais na base do Tabuleiro */
+    .board-stage-bottom {
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 5px;
+      background: #dfe2e5;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 220ms var(--ease-out);
+    }
+
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* ==========================================================================
+       COLUNA DIREITA DA FOLHA: ORIENTAÇÃO, FONTES SEPARADAS & PLANILHA
+       ========================================================================== */
+    .guidance-column {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 2px;
+      gap: 12px;
+    }
+
+    /* Cartões das 3 Fontes Separadas (Tutor, Livro, Stockfish) sem sombra, 1px border */
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 14px 16px;
+    }
+
+    .source-card.tutor {
+      border-left: 3px solid #b87d14;
+    }
+
+    .source-card.book {
+      border-left: 3px solid var(--positive);
+    }
+
+    .source-card.engine {
+      border-left: 3px solid var(--accent);
+    }
+
+    .source-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .source-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .source-body {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .source-citation {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--rule);
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Feedback Construtivo de Lance (3 faixas) */
+    .feedback-banner {
+      border-radius: var(--radius-card);
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+    .feedback-banner.main {
+      background: var(--pill-positive-bg);
+      color: var(--pill-positive-ink);
+      border-color: #a9e5be;
+    }
+    .feedback-banner.plausible {
+      background: var(--pill-info-bg);
+      color: var(--pill-info-ink);
+      border-color: #b5d8e2;
+    }
+    .feedback-banner.retry {
+      background: var(--pill-warning-bg);
+      color: var(--pill-warning-ink);
+      border-color: #f3d78b;
+    }
+
+    /* Tabelas e Listas (app.css: sem zebra, 12px grey sentence-case headers) */
+    table.clean-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table.clean-table th {
+      height: 32px;
+      padding: 0 10px;
+      text-align: left;
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    table.clean-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--rule);
+      font-size: 13px;
+      vertical-align: baseline;
+    }
+    table.clean-table tr:last-child td {
+      border-bottom: 0;
+    }
+    table.clean-table th.n, table.clean-table td.n {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rows {
+      display: grid;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 42px;
+      padding: 8px 0;
+    }
+    .row + .row {
+      border-top: 1px solid var(--rule);
+    }
+
+    .empty-box {
+      display: grid;
+      place-items: center;
+      min-height: 76px;
+      padding: 14px;
+      border: 1px dashed var(--control);
+      border-radius: var(--radius-control);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    /* Modal Flutuante (único elemento com sombra permitida conforme §9.4) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(19, 20, 22, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      z-index: 40;
+      padding: 24px;
     }
-    .arrows-svg {
-      position: absolute;
-      inset: 0;
+
+    .modal-dialog {
       width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    /* BARRA DE CONTROLES SIMPLIFICADA: ANTERIOR • VER DICA • PRÓXIMO + MAIS */
-    .controls-bar {
-      width: 100%;
-      max-width: 580px;
-      padding: 10px 14px;
-      border-radius: 20px;
-      background: #FFFFFF;
-      border: 2px solid var(--border-soft);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      box-shadow: var(--shadow-card);
-    }
-    .primary-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .btn-action {
-      padding: 9px 16px;
-      border-radius: 14px;
-      border: 1.5px solid var(--border-soft);
-      background: var(--bg-cream);
-      color: var(--text-primary);
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-    }
-    .btn-action:hover:not(:disabled) {
-      background: var(--mint-bg);
-      border-color: var(--mint-border);
-    }
-    .btn-action:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-    .btn-primary-green {
-      background: var(--green-primary);
-      color: #FFFFFF;
-      border-color: var(--green-primary);
-      box-shadow: 0 4px 12px rgba(22, 134, 94, 0.25);
-    }
-    .btn-primary-green:hover:not(:disabled) {
-      background: var(--green-hover);
-      color: #FFFFFF;
-    }
-    .btn-hint-yellow {
-      background: var(--yellow-bg);
-      color: var(--yellow-text);
-      border-color: var(--yellow-border);
-    }
-    .btn-hint-yellow:hover {
-      background: #FCD986;
-    }
-
-    /* GAVETA "MAIS OPÇÕES" SOB DEMANDA */
-    .more-tools-drawer {
-      width: 100%;
-      max-width: 580px;
-      padding: 10px 14px;
-      border-radius: 16px;
-      background: #FFFFFF;
-      border: 1.5px solid var(--border-soft);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .mini-tool-btn, .mini-select {
-      padding: 6px 11px;
-      border-radius: 10px;
-      border: 1.5px solid var(--border-soft);
-      background: var(--bg-cream);
-      color: var(--text-primary);
-      font-size: 11.5px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .mini-tool-btn.active {
-      background: var(--sky-bg);
-      border-color: var(--sky-border);
-      color: var(--sky-text);
-    }
-
-    /* PAINEL DIREITO: GUIA DA LIÇÃO E TRÊS FONTES DE ORIENTAÇÃO */
-    .guide-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 10px;
-      margin-bottom: 10px;
-      border-bottom: 1.5px solid var(--border-soft);
-    }
-    .guide-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    /* CARTÕES COLORIDOS COM SIGNIFICADO CLARO (PÁGINAS 3, 5 e 7) */
-    .tone-card {
-      padding: 13px 15px;
-      border-radius: 18px;
-      border: 2px solid transparent;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .tone-mint {
-      background: var(--mint-bg);
-      border-color: var(--mint-border);
-      color: var(--mint-text);
-    }
-    .tone-sky {
-      background: var(--sky-bg);
-      border-color: var(--sky-border);
-      color: var(--sky-text);
-    }
-    .tone-yellow {
-      background: var(--yellow-bg);
-      border-color: var(--yellow-border);
-      color: var(--yellow-text);
-    }
-    .tone-coral {
-      background: var(--coral-bg);
-      border-color: var(--coral-border);
-      color: var(--coral-text);
-    }
-    .tone-cream {
-      background: var(--bg-cream);
-      border-color: var(--border-soft);
-      color: var(--text-primary);
-    }
-
-    .source-eyebrow {
-      font-size: 10.5px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .source-meta {
-      font-size: 11px;
-      font-weight: 700;
-      opacity: 0.85;
-    }
-    .source-body {
-      font-size: 13px;
-      line-height: 1.5;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    /* SELETOR DE CORES DO TREINADOR DE ABERTURAS */
-    .trainer-setup-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-      background: var(--bg-cream);
-      padding: 8px 10px;
-      border-radius: 14px;
-      border: 1.5px solid var(--border-soft);
-    }
-    .color-choice-btn {
-      flex: 1;
-      padding: 6px 8px;
-      border-radius: 10px;
-      border: 1.5px solid transparent;
-      background: transparent;
-      font-size: 11.5px;
-      font-weight: 800;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-    .color-choice-btn.active {
-      background: #FFFFFF;
-      border-color: var(--green-primary);
-      color: var(--green-primary);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    /* PLANILHA DE LANCES (MODO EXPLORADOR) */
-    .movesheet-table {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      background: var(--bg-cream);
-      padding: 8px;
-      border-radius: 14px;
-      border: 1.5px solid var(--border-soft);
-      max-height: 220px;
+      max-width: 660px;
+      max-height: 84vh;
       overflow-y: auto;
-    }
-    .move-row {
-      display: grid;
-      grid-template-columns: 38px 1fr 1fr;
-      align-items: center;
-      font-size: 12.5px;
-      font-weight: 700;
-    }
-    .move-num { color: var(--text-muted); padding-left: 4px; }
-    .ply-btn {
-      text-align: left;
-      padding: 5px 9px;
-      border-radius: 9px;
-      border: none;
-      background: transparent;
-      color: var(--text-primary);
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .ply-btn:hover { background: rgba(22, 134, 94, 0.1); }
-    .ply-btn.active {
-      background: var(--green-primary);
-      color: #FFFFFF;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sheet);
+      padding: 24px;
+      box-shadow: 0 12px 32px rgba(19, 20, 22, 0.14);
     }
   </style>
 </head>
 <body>
   <div id="root"></div>
-  <script src="chess-engine.js"></script>
-  <script src="books-data.js"></script>
-  <script src="openings-data.js"></script>
-  <script src="app-bundle.js"></script>
+
+  <script src="./chess-engine.js"></script>
+  <script src="./books-data.js"></script>
+  <script src="./openings-data.js"></script>
+  <script src="./app-bundle.js"></script>
 </body>
 </html>

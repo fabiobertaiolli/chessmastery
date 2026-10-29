@@ -1,7 +1,7 @@
-# ♞ Chess Mastery — Documentação Completa de Produto, UX e Arquitetura (v1.2.0)
+# Chess Mastery — Documentação Completa de Produto, UX e Arquitetura (v1.3.0)
 
-> **Chess Mastery — Academia Lúdica de Clássicos & Treinador Inteligente de Aberturas**  
-> Aplicativo nativo macOS (Apple Silicon `arm64`) com design acolhedor em tons claros para crianças, iniciantes e estudantes de xadrez, integrando 4 obras-primas clássicas da literatura enxadrística, conversor histórico de Notação Descritiva, **Treinador Inteligente de Aberturas** e separação transparente entre **Tutor**, **Livro** e **Stockfish**.
+> **Chess Mastery — Estúdio Clássico & Treinador Inteligente de Aberturas (`taste-skill` v2.1 — `Framed Sheet`)**  
+> Aplicativo nativo macOS (Apple Silicon `arm64`) construído sobre a direção de arte **`Framed Sheet`** do `taste-skill` v2.1: moldura em L suave (`#f4f6f5`) sem linha divisória entre sidebar e topbar, folha de estudo branca (`#ffffff`) recuada `8px` com borda hairline de `1px` e sem sombras pesadas, tipografia `IBM Plex Sans` + `IBM Plex Mono`, 4 obras-primas clássicas da literatura enxadrística, conversor histórico de Notação Descritiva, **Treinador Inteligente de Aberturas** e separação transparente entre **Tutor**, **Livro** e **Stockfish**.
 
 ---
 
