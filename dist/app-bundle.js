@@ -1,12 +1,10 @@
 /* ============================================================================
- * CHESS MASTERY v1.3.0 — TASTE-SKILL REDESIGN (FRAMED-SHEET STYLE & SHELL)
- * - Framed-sheet L-chrome (#f4f6f5) + inset white work-sheet (#ffffff, 8px inset,
- *   16px radius, 1px border, zero shadow)
- * - IBM Plex Sans + IBM Plex Mono (tabular numerals for ECO, moves, evaluations)
- * - Strict Anti-Emoji compliance: 1.5px stroke SVG icons throughout
- * - All 4 books in left sidebar accordion + Isolated Chapter Mode
- * - 18 Openings & Defenses catalog + Intelligent Opening Trainer (6-step flow)
- * - 3 Separated Guidance Sources: Do Tutor, Do Livro (with citation & OCR), Do Stockfish
+ * CHESS MASTERY v2.0 — GOOGLE STITCH (PLAYFUL CHESS STUDIO) + LIVE BOOK READER
+ * - 4 Telas Completas do Google Stitch:
+ *   1) Aprender & Ler (Tabuleiro Chess.com + Livro Vivo com Lances Clicáveis nos Parágrafos + 3 Mentores)
+ *   2) Biblioteca Mágica (Os 4 Livros Clássicos Completos com todos os capítulos)
+ *   3) Aberturas & Estudos (18+ Aberturas, Meio-Jogo, Finais e Cadernos Google NotebookLM)
+ *   4) Conquistas & Estrelas (Sala de Troféus, Estrelas Mágicas e Fila de Revisão)
  * ============================================================================ */
 (function () {
   const {
@@ -15,12 +13,15 @@
     sanToPortugueseAlgebraic,
     sanToFigurine,
     formatMoveByMode,
+    splitMoveAnnotations,
   } = window.ChessMasteryEngine;
 
   const PREINSTALLED_BOOKS = window.PREINSTALLED_BOOKS || [];
   const CHESS_OPENINGS = window.CHESS_OPENINGS || [];
-  const OPENING_CATEGORIES = window.OPENING_CATEGORIES || [];
 
+  // ==========================================================================
+  // 1. ÁUDIO ACÚSTICO DE MADEIRA + SÍNTESE DE VOZ PT-BR
+  // ==========================================================================
   const chessAudio = {
     ctx: null,
     muted: false,
@@ -42,14 +43,31 @@
       const o = this.ctx.createOscillator();
       const g = this.ctx.createGain();
       o.type = 'triangle';
-      o.frequency.setValueAtTime(150, now);
-      o.frequency.exponentialRampToValueAtTime(55, now + 0.065);
-      g.gain.setValueAtTime(0.2, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      o.frequency.setValueAtTime(160, now);
+      o.frequency.exponentialRampToValueAtTime(58, now + 0.068);
+      g.gain.setValueAtTime(0.22, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
       o.connect(g);
       g.connect(this.ctx.destination);
       o.start(now);
-      o.stop(now + 0.075);
+      o.stop(now + 0.08);
+    },
+    playCapture() {
+      if (this.muted) return;
+      this.init();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(220, now);
+      o.frequency.exponentialRampToValueAtTime(48, now + 0.085);
+      g.gain.setValueAtTime(0.25, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      o.connect(g);
+      g.connect(this.ctx.destination);
+      o.start(now);
+      o.stop(now + 0.095);
     },
     playSuccess() {
       if (this.muted) return;
@@ -77,17 +95,85 @@
       const o = this.ctx.createOscillator();
       const g = this.ctx.createGain();
       o.type = 'sine';
-      o.frequency.setValueAtTime(310, now);
-      o.frequency.linearRampToValueAtTime(240, now + 0.14);
-      g.gain.setValueAtTime(0.12, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      o.frequency.setValueAtTime(300, now);
+      o.frequency.linearRampToValueAtTime(220, now + 0.15);
+      g.gain.setValueAtTime(0.13, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
       o.connect(g);
       g.connect(this.ctx.destination);
       o.start(now);
-      o.stop(now + 0.17);
+      o.stop(now + 0.18);
     },
   };
 
+  // ==========================================================================
+  // 2. PEÇAS DE XADREZ VETORIAIS STAUNTON DE ALTO CONTRASTE
+  // ==========================================================================
+  const PIECE_SVGS = {
+    wP: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    wR: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5"/><path d="M34 14l-3 3H14l-3-3"/><path d="M31 17v12.5H14V17"/><path d="M31 29.5l1.5 2.5h-20l1.5-2.5"/><path d="M11 14h23" fill="none"/></g></svg>`,
+    wN: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#fff"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#fff"/><circle cx="9.5" cy="25.5" r=".5" fill="#18191b"/><circle cx="14.933" cy="15.75" r="1" fill="#18191b"/></g></svg>`,
+    wB: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g fill="#fff" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5"/></g></svg>`,
+    wQ: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14l2 12z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none"/></g></svg>`,
+    wK: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#fff"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></svg>`,
+    bP: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    bR: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 36v-4h21v4H12z"/><path d="M14 29.5v-13h17v13H14z"/><path d="M14 16.5L11 14h23l-3 2.5H14zM11 14V9h4v2h5V9h5v2h5V9h4v5H11z"/><path d="M12 35.5h21M13 31.5h19M14 29.5h17M14 16.5h17M11 14h23" fill="none" stroke="#d5d8dc" stroke-width="1"/></g></svg>`,
+    bN: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#1e2022"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#1e2022"/><circle cx="9.5" cy="25.5" r=".6" fill="#d5d8dc" stroke="none"/><circle cx="14.93" cy="15.75" r="1" fill="#d5d8dc" stroke="none"/></g></svg>`,
+    bB: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g fill="#1e2022" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke="#d5d8dc"/></g></svg>`,
+    bQ: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14l2 12z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none" stroke="#d5d8dc"/></g></svg>`,
+    bK: `<svg viewBox="0 0 45 45" style="width:100%;height:100%"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#1e2022" stroke-linecap="butt"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#1e2022"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0" stroke="#d5d8dc"/></g></svg>`,
+  };
+
+  function getPieceSvg(color, type) {
+    const key = `${color}${String(type).toUpperCase()}`;
+    return PIECE_SVGS[key] || '';
+  }
+
+  const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
+  const PIECE_NAMES_PT = { p: 'Peão', n: 'Cavalo', b: 'Bispo', r: 'Torre', q: 'Dama', k: 'Rei' };
+
+  const BOARD_THEMES = {
+    stitch_wood: {
+      name: 'Estúdio Madeira Artesanal',
+      light: '#F5E6CE',
+      dark: '#B58A65',
+      lastLight: '#CBEFD8',
+      lastDark: '#69B084',
+    },
+    chesscom_green: {
+      name: 'Chess.com Tournament',
+      light: '#EEEED2',
+      dark: '#769656',
+      lastLight: '#F6F669',
+      lastDark: '#BACA2B',
+    },
+    lichess_wood: {
+      name: 'Lichess Classic Wood',
+      light: '#F0D9B5',
+      dark: '#B58863',
+      lastLight: '#CDD26A',
+      lastDark: '#AAA23A',
+    },
+    walnut_luxury: {
+      name: 'Nogueira Real',
+      light: '#EAD8C0',
+      dark: '#8B5A2B',
+      lastLight: '#E4C96B',
+      lastDark: '#A68232',
+    },
+    slate_ice: {
+      name: 'Cristal Azul',
+      light: '#DEE3E6',
+      dark: '#78909C',
+      lastLight: '#9BE0C8',
+      lastDark: '#55AB91',
+    },
+  };
+
+  // ==========================================================================
+  // 3. MOTOR TÁTICO STOCKFISH LOCAL & AVALIADOR
+  // ==========================================================================
   const PIECE_VALS = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
   function evaluateStatic(chess) {
     if (chess.isCheckmate && chess.isCheckmate()) return chess.turn() === 'w' ? -99999 : 99999;
@@ -98,8 +184,7 @@
         const p = b[r][c];
         if (!p) continue;
         let v = PIECE_VALS[p.type] || 0;
-        const centerBonus = (3.5 - Math.abs(3.5 - r)) * 6 + (3.5 - Math.abs(3.5 - c)) * 6;
-        if (p.type !== 'k') v += centerBonus;
+        if ((r === 3 || r === 4) && (c === 3 || c === 4)) v += 22;
         score += p.color === 'w' ? v : -v;
       }
     }
@@ -107,356 +192,452 @@
   }
 
   function analyzePositionLocal(fen) {
-    const chess = new Chess(fen);
-    const turn = chess.turn();
-    const moves = chess.moves({ verbose: true });
-    if (!moves || moves.length === 0) {
-      return {
-        scoreCp: 0,
-        bestMoveSan: '—',
-        bestMoveFrom: '',
-        bestMoveTo: '',
-        pvLineSan: [],
-        depth: 12,
-        explanationPt: 'Posição equilibrada sem lances adicionais disponíveis.',
-      };
-    }
-    let bestMove = moves[0];
-    let bestScore = turn === 'w' ? -Infinity : Infinity;
-    for (const m of moves.slice(0, 18)) {
-      const c1 = chess.clone ? chess.clone() : new Chess(fen);
-      c1.move(m);
-      const sc = evaluateStatic(c1);
-      if ((turn === 'w' && sc > bestScore) || (turn === 'b' && sc < bestScore)) {
-        bestScore = sc;
-        bestMove = m;
-      }
-    }
-    const clampedScore = Math.max(-2000, Math.min(2000, Math.round(bestScore)));
-    const pvLineSan = [bestMove.san];
-    try {
-      const c2 = chess.clone ? chess.clone() : new Chess(fen);
-      c2.move(bestMove);
-      const replyMoves = c2.moves({ verbose: true });
-      if (replyMoves && replyMoves[0]) pvLineSan.push(replyMoves[0].san);
-    } catch (e) {}
-
-    const advText =
-      Math.abs(clampedScore) < 35
-        ? 'Equilíbrio dinâmico entre ambos os lados.'
-        : clampedScore > 0
-        ? 'Vantagem posicional das Brancas pelo espaço e atividade das peças.'
-        : 'Contrajogo ativo das Pretas com boa coordenação defensiva.';
-
-    return {
-      scoreCp: clampedScore,
-      bestMoveSan: bestMove.san,
-      bestMoveFrom: bestMove.from,
-      bestMoveTo: bestMove.to,
-      pvLineSan,
-      depth: 14,
-      explanationPt: advText,
-    };
-  }
-
-  function buildGameSteps(game) {
-    const initialFen =
-      game.initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-    const chess = new Chess(initialFen);
-    const steps = [];
-    const movesSan = game.movesSan || [];
-    const annotations = game.annotations || {};
-
-    for (let i = 0; i < movesSan.length; i++) {
-      const san = movesSan[i];
-      const fenBefore = chess.fen();
-      const moveObj = chess.move(san);
-      if (!moveObj) break;
-      const fenAfter = chess.fen();
-      const ply = i + 1;
-      const moveNumber = Math.floor(i / 2) + 1;
-      steps.push({
-        ply,
-        moveNumber,
-        color: moveObj.color,
-        san: moveObj.san,
-        from: moveObj.from,
-        to: moveObj.to,
-        piece: moveObj.piece,
-        captured: moveObj.captured,
-        promotion: moveObj.promotion,
-        fenBefore,
-        fenAfter,
-        inCheck: chess.inCheck ? chess.inCheck() : false,
-        isCheckmate: chess.isCheckmate ? chess.isCheckmate() : false,
-        isCastling: moveObj.san.indexOf('O-O') === 0,
-        descriptivePt: moveToDescriptive(moveObj, 'pt'),
-        descriptiveEs: moveToDescriptive(moveObj, 'es'),
-        annotation: annotations[ply] || undefined,
-      });
-    }
-    return { initialFen, steps };
-  }
-
-  const STORAGE_KEY = 'chess_mastery_progress_v2';
-
-  // ==========================================================================
-  // 1. ÍCONES VETORIAIS 1.5PX STROKE (ZERO EMOJI — TASTE-SKILL HOUSE RULE)
-  // ==========================================================================
-  const ICONS = {
-    knightMark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5v-2a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v2Z"/><path d="M7 15 6 9c0-3 2.5-5 6-5 1.5 0 3 .5 4 1.5L18 4l-.5 4.5L19 11l-3 1.5-2-1.5-2.5 2V15"/></svg>`,
-    compass: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 13.5 13.5 8.5 15.5 10.5 10.5 15.5 8.5"/></svg>`,
-    book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>`,
-    board: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>`,
-    ledger: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>`,
-    search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`,
-    chevronDown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
-    chevronRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
-    chevronLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>`,
-    skipBack: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>`,
-    skipForward: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>`,
-    flip: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`,
-    bulb: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
-    volumeOn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
-    volumeOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>`,
-    cpu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>`,
-    tutor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="v6"/><path d="M6 10.5v5.5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5"/></svg>`,
-    fileCheck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>`,
-    arrowLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
-    close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>`,
-  };
-
-  // ==========================================================================
-  // 2. PEÇAS DE XADREZ VETORIAIS STAUNTON DE ALTO CONTRASTE
-  // ==========================================================================
-  const PIECE_SVGS = {
-    wP: `<svg viewBox="0 0 45 45" class="chess-piece"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    wR: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5"/><path d="M34 14l-3 3H14l-3-3"/><path d="M31 17v12.5H14V17"/><path d="M31 29.5l1.5 2.5h-20l1.5-2.5"/><path d="M11 14h23" fill="none"/></g></svg>`,
-    wN: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#fff"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#fff"/><circle cx="9.5" cy="25.5" r=".5" fill="#18191b"/><circle cx="14.933" cy="15.75" r="1" fill="#18191b"/></g></svg>`,
-    wB: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g fill="#fff" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5"/></g></svg>`,
-    wQ: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="#fff" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14l2 12z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none"/></g></svg>`,
-    wK: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#18191b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#fff" stroke-linecap="butt"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#fff"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"/></g></svg>`,
-    bP: `<svg viewBox="0 0 45 45" class="chess-piece"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-    bR: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 36v-4h21v4H12z"/><path d="M14 29.5v-13h17v13H14z"/><path d="M14 16.5L11 14h23l-3 2.5H14zM11 14V9h4v2h5V9h5v2h5V9h4v5H11z"/><path d="M12 35.5h21M13 31.5h19M14 29.5h17M14 16.5h17M11 14h23" fill="none" stroke="#d5d8dc" stroke-width="1"/></g></svg>`,
-    bN: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" fill="#1e2022"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3" fill="#1e2022"/><circle cx="9.5" cy="25.5" r=".6" fill="#d5d8dc" stroke="none"/><circle cx="14.93" cy="15.75" r="1" fill="#d5d8dc" stroke="none"/></g></svg>`,
-    bB: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g fill="#1e2022" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke="#d5d8dc"/></g></svg>`,
-    bQ: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="#1e2022" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM24.5 7.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0zM33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0z"/><path d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14l2 12z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none" stroke="#d5d8dc"/></g></svg>`,
-    bK: `<svg viewBox="0 0 45 45" class="chess-piece"><g fill="none" stroke="#0c0d0e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#1e2022" stroke-linecap="butt"/><path d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10V37z" fill="#1e2022"/><path d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0" stroke="#d5d8dc"/></g></svg>`,
-  };
-
-  const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-  const RANKS = ['8', '7', '6', '5', '4', '3', '2', '1'];
-
-  const PIECE_NAMES_PT = {
-    p: 'Peão',
-    n: 'Cavalo',
-    b: 'Bispo',
-    r: 'Torre',
-    q: 'Dama',
-    k: 'Rei',
-  };
-
-  // ==========================================================================
-  // 3. HELPERS DO TREINADOR INTELIGENTE DE ABERTURAS & CITAÇÕES
-  // ==========================================================================
-  function buildProgressiveHints(expectedStep, openingContext) {
-    if (!expectedStep) {
-      return {
-        level1Question: 'Qual plano melhora a coordenação das suas peças nesta posição?',
-        level2PieceAndPlan: 'Observe o controle das casas centrais (e4, d4, e5, d5) e a segurança do Rei.',
-        level3MoveAndWhy: 'Sequência principal concluída. Use os controles para revisar ou explorar variantes.',
-      };
-    }
-
-    const piecePt = PIECE_NAMES_PT[expectedStep.piece] || 'Peça';
-    const movePt = sanToPortugueseAlgebraic(expectedStep.san);
-    const ann = expectedStep.annotation || {};
-
-    let level1 = ann.hintPt;
-    if (!level1) {
-      if (expectedStep.isCastling) {
-        level1 = 'Seu Rei ainda está no centro. Como proteger o Rei e ativar a Torre em um único lance?';
-      } else if (['e4', 'd4', 'e5', 'd5', 'c4', 'c5'].includes(expectedStep.to)) {
-        level1 = 'Qual lance disputa diretamente o controle do território central do tabuleiro?';
-      } else if (expectedStep.piece === 'n' || expectedStep.piece === 'b') {
-        level1 = `Qual peça menor precisa sair da fileira inicial para participar da luta pelo centro?`;
-      } else {
-        level1 = 'Qual peça pode melhorar sua atividade ou criar uma ameaça direta agora?';
-      }
-    }
-
-    const level2 = expectedStep.isCastling
-      ? `Olhe para o Rei em ${expectedStep.from}: prepare o roque levando-o para ${expectedStep.to}.`
-      : `Considere ativar o seu ${piecePt} da casa ${expectedStep.from} rumo à casa ${expectedStep.to}.`;
-
-    const reason =
-      ann.commentPt ||
-      (openingContext && openingContext.summaryPt) ||
-      'Este lance desenvolve com ganho de tempo e mantém a harmonia da posição.';
-
-    const level3 = `Lance recomendado: ${movePt} (${piecePt} de ${expectedStep.from} para ${expectedStep.to}). ${reason}`;
-
-    return {
-      level1Question: level1,
-      level2PieceAndPlan: level2,
-      level3MoveAndWhy: level3,
-    };
-  }
-
-  function evaluateUserMove({ fen, from, to, promotion, expectedStep, engineEval }) {
     try {
       const chess = new Chess(fen);
-      const played = chess.move({ from, to, promotion: promotion || 'q' });
-      if (!played) return null;
-
-      const playedSan = played.san;
-      const playedSanPt = sanToPortugueseAlgebraic(playedSan);
-      const expectedSan = expectedStep ? expectedStep.san : '';
-      const expectedSanPt = sanToPortugueseAlgebraic(expectedSan);
-
-      if (expectedStep && playedSan === expectedSan) {
-        const comment =
-          (expectedStep.annotation && expectedStep.annotation.commentPt) ||
-          'Lance teórico principal executado com precisão dentro do plano.';
+      const turn = chess.turn();
+      const legalMoves = chess.moves({ verbose: true });
+      if (!legalMoves || legalMoves.length === 0) {
         return {
-          tier: 'main',
-          accepted: true,
-          playedSan,
-          playedSanPt,
-          expectedSan,
-          expectedSanPt,
-          headlinePt: `Lance teórico principal: ${playedSanPt}`,
-          detailPt: comment,
+          scoreCp: 0,
+          mateIn: chess.inCheck() ? 0 : null,
+          bestMoveSan: '-',
+          bestMoveFrom: '',
+          bestMoveTo: '',
+          pvLineSan: [],
+          explanationPt: 'Partida finalizada nesta posição.',
         };
       }
-
-      if (
-        engineEval &&
-        engineEval.bestMoveSan &&
-        playedSan === engineEval.bestMoveSan
-      ) {
-        return {
-          tier: 'plausible',
-          accepted: true,
-          playedSan,
-          playedSanPt,
-          expectedSan,
-          expectedSanPt,
-          headlinePt: `Alternativa tática sólida: ${playedSanPt}`,
-          detailPt: `Seu lance ${playedSanPt} é aprovado pelo motor tático. Na linha teórica principal deste estudo, o lance de referência é ${expectedSanPt}.`,
-        };
+      let bestMove = legalMoves[0];
+      let bestScore = turn === 'w' ? -999999 : 999999;
+      for (const mv of legalMoves) {
+        chess.move(mv);
+        let sc = evaluateStatic(chess);
+        const replies = chess.moves({ verbose: true });
+        if (replies.length > 0) {
+          let worstReply = turn === 'w' ? 999999 : -999999;
+          for (let i = 0; i < Math.min(replies.length, 10); i++) {
+            chess.move(replies[i]);
+            const rSc = evaluateStatic(chess);
+            if (turn === 'w' && rSc < worstReply) worstReply = rSc;
+            if (turn === 'b' && rSc > worstReply) worstReply = rSc;
+            chess.undo();
+          }
+          sc = worstReply;
+        }
+        chess.undo();
+        if ((turn === 'w' && sc > bestScore) || (turn === 'b' && sc < bestScore)) {
+          bestScore = sc;
+          bestMove = mv;
+        }
       }
 
-      const piecePt = expectedStep ? PIECE_NAMES_PT[expectedStep.piece] || 'peça' : 'peça';
+      const pv = [bestMove.san];
+      chess.move(bestMove);
+      const nextReplies = chess.moves({ verbose: true });
+      if (nextReplies.length > 0) pv.push(nextReplies[0].san);
+
+      const bestPt = sanToPortugueseAlgebraic(bestMove.san);
+      const advantageText =
+        Math.abs(bestScore) < 45
+          ? 'Posição equilibrada no centro.'
+          : bestScore > 0
+          ? 'As Brancas possuem iniciativa e melhor atividade das peças.'
+          : 'As Pretas possuem contrajogo ativo e boa coordenação.';
+
       return {
-        tier: 'retry',
-        accepted: false,
-        playedSan,
-        playedSanPt,
-        expectedSan,
-        expectedSanPt,
-        headlinePt: `Você tentou ${playedSanPt} — tente outra vez ou consulte uma dica`,
-        detailPt: `Neste momento do repertório, priorize o plano principal ativando seu ${piecePt}. Use o botão "Ver dica" se quiser orientação passo a passo.`,
+        scoreCp: Math.max(-1500, Math.min(1500, bestScore)),
+        mateIn: Math.abs(bestScore) > 50000 ? 1 : null,
+        bestMoveSan: bestMove.san,
+        bestMoveFrom: bestMove.from,
+        bestMoveTo: bestMove.to,
+        pvLineSan: pv,
+        explanationPt: `${advantageText} O Robô Pipo sugere considerar ${bestPt} (${bestMove.from} → ${bestMove.to}).`,
       };
-    } catch (e) {
+    } catch {
+      return {
+        scoreCp: 0,
+        mateIn: null,
+        bestMoveSan: 'e4',
+        bestMoveFrom: 'e2',
+        bestMoveTo: 'e4',
+        pvLineSan: ['e4', 'e5'],
+        explanationPt: 'Posição pronta para análise.',
+      };
+    }
+  }
+
+  // ==========================================================================
+  // 4. PARSER DE LIVRO INTERATIVO COM LANCES CLICÁVEIS NOS PARÁGRAFOS
+  // ==========================================================================
+  function portugueseAlgebraicToSan(moveStr) {
+    if (!moveStr) return '';
+    const trimmed = moveStr.trim().replace(/^(\d+\.{1,3})\s*/, '');
+    const { core, check, nag } = splitMoveAnnotations(trimmed);
+    if (!core) return trimmed;
+    if (core === '0-0' || core === 'O-O') return `O-O${check}${nag}`;
+    if (core === '0-0-0' || core === 'O-O-O') return `O-O-O${check}${nag}`;
+    const ptToEn = { R: 'K', D: 'Q', T: 'R', B: 'B', C: 'N', A: 'B' };
+    let converted = core;
+    if (/^[RDTBCA][a-h1-8x]/.test(converted)) {
+      converted = (ptToEn[converted[0]] || converted[0]) + converted.slice(1);
+    }
+    converted = converted.replace(/=([RDTBCA])/, (_, p) => `=${ptToEn[p] || p}`);
+    return `${converted}${check}${nag}`;
+  }
+
+  function normalizeMoveToken(str) {
+    if (!str) return '';
+    return str
+      .trim()
+      .replace(/^(\d+\.{1,3})\s*/, '')
+      .replace(/[+#!?.,;()]/g, '')
+      .replace(/0-0-0/g, 'O-O-O')
+      .replace(/0-0/g, 'O-O')
+      .trim();
+  }
+
+  function matchTokenToGameStep(rawToken, computedSteps, contextPly) {
+    if (!rawToken || !computedSteps || !computedSteps.length) return null;
+    const numMatch = rawToken.trim().match(/^(\d+)(\.{1,3})\s*(.+)$/);
+    let explicitMoveNum = null;
+    let explicitBlack = null;
+    let movePart = rawToken.trim();
+    if (numMatch) {
+      explicitMoveNum = parseInt(numMatch[1], 10);
+      explicitBlack = numMatch[2].length >= 2;
+      movePart = numMatch[3].trim();
+    }
+    const cleanMove = normalizeMoveToken(movePart);
+    const cleanSanCandidate = normalizeMoveToken(portugueseAlgebraicToSan(movePart));
+    if (!cleanMove) return null;
+
+    if (explicitMoveNum !== null) {
+      const cands = computedSteps.filter((s) => s.moveNumber === explicitMoveNum);
+      for (const s of cands) {
+        if (explicitBlack !== null && (s.color === 'b') !== explicitBlack && cands.length > 1)
+          continue;
+        const sSan = normalizeMoveToken(s.san);
+        const sPt = normalizeMoveToken(sanToPortugueseAlgebraic(s.san));
+        const sDesc = normalizeMoveToken(s.descriptivePt);
+        if (
+          sSan === cleanMove ||
+          sSan === cleanSanCandidate ||
+          sPt === cleanMove ||
+          sDesc.toLowerCase() === cleanMove.toLowerCase()
+        ) {
+          return s;
+        }
+      }
+    }
+
+    const sorted = [...computedSteps].sort((a, b) => {
+      if (contextPly == null) return a.ply - b.ply;
+      return Math.abs(a.ply - contextPly) - Math.abs(b.ply - contextPly);
+    });
+
+    for (const s of sorted) {
+      const sSan = normalizeMoveToken(s.san);
+      const sPt = normalizeMoveToken(sanToPortugueseAlgebraic(s.san));
+      const sDesc = normalizeMoveToken(s.descriptivePt);
+      const sDescShort = sDesc.replace(/\([^)]*\)/g, '');
+      if (
+        sSan === cleanMove ||
+        sSan === cleanSanCandidate ||
+        sPt === cleanMove ||
+        sDesc.toLowerCase() === cleanMove.toLowerCase() ||
+        (sDescShort.length >= 3 && sDescShort.toLowerCase() === cleanMove.toLowerCase())
+      ) {
+        return s;
+      }
+    }
+    return null;
+  }
+
+  const INLINE_MOVE_REGEX =
+    /(\b\d+\.(?:\.\.)?\s*(?:O-O-O|O-O|0-0-0|0-0|[KQRBNRDTBCA]?[a-h]?[1-8]?x?[a-h][1-8](?:=[KQRBNRDTBCA])?[+#!?]*|(?:TR|TD|CR|CD|BR|BD|[PCTBDR])[1-8][A-Z]{1,2}[+#!?]*|[PCTBDR]x[PCTBDR](?:\([1-8][A-Z]{1,2}\))?[+#!?]*)|\b(?:O-O-O|O-O|0-0-0|0-0|[KQRBNRDTBC][a-h1-8]?x?[a-h][1-8](?:=[KQRBNRDTBC])?[+#!?]+|[KQRBNRDTBC][a-h1-8]?x[a-h][1-8](?:=[KQRBNRDTBC])?[+#!?]*|[KQRBNRDTBC][a-h][1-8][+#!?]*|[a-h]x[a-h][1-8](?:=[KQRBNRDTBC])?[+#!?]*|\b(?:P4R|P4D|P3B|P3BR|P3CD|C3BR|C3BD|C2R|B5C|B4B|B4BD|TR1CR|TD1CR|TR1R|TD1D)[+#!?]*))/g;
+
+  function resolveVariationMove(baseFen, rawToken) {
+    if (!baseFen || !rawToken) return null;
+    try {
+      const sanCand = portugueseAlgebraicToSan(rawToken).replace(/[!?]+$/, '');
+      const c = new Chess(baseFen);
+      const mv = c.move(sanCand, { sloppy: true });
+      if (!mv) return null;
+      return {
+        fen: c.fen(),
+        from: mv.from,
+        to: mv.to,
+        san: mv.san,
+        color: mv.color,
+      };
+    } catch {
       return null;
     }
   }
 
-  function resolveBookCitation({ book, chapter, game, opening, studyType }) {
-    if (studyType === 'opening' && opening) {
-      return {
-        bookTitle: 'Enciclopédia de Aberturas & Xadrez Básico',
-        author: "Orfeu G. D'Agostini / A. Nimzowitsch",
-        chapterLabel: `Código ECO ${opening.eco} · ${opening.categoryLabelPt}`,
-        pageEstimate: 'Seção de Aberturas, págs. 385–448',
-        sourceFile: 'Xadrez Básico - Orfeu D_Agostini.pdf',
-      };
+  function parseParagraphSegments(text, computedSteps, contextPly) {
+    if (!text) return [];
+    const segments = [];
+    let lastIndex = 0;
+    const contextStep =
+      (contextPly != null && computedSteps.find((s) => s.ply === contextPly)) || computedSteps[0];
+    let runningVarFen = contextStep ? contextStep.fenBefore : null;
+
+    const matches = [...String(text).matchAll(INLINE_MOVE_REGEX)];
+    for (const m of matches) {
+      const rawToken = m[0];
+      const startIdx = m.index;
+      const matchedStep = matchTokenToGameStep(rawToken, computedSteps, contextPly);
+      let moveSeg = null;
+
+      if (matchedStep) {
+        moveSeg = {
+          type: 'move',
+          content: rawToken,
+          ply: matchedStep.ply,
+          fen: matchedStep.fenAfter,
+          from: matchedStep.from,
+          to: matchedStep.to,
+          san: matchedStep.san,
+          isVariation: false,
+        };
+        runningVarFen = matchedStep.fenAfter;
+      } else if (runningVarFen) {
+        let resolved = resolveVariationMove(runningVarFen, rawToken);
+        if (!resolved && contextStep) {
+          resolved =
+            resolveVariationMove(contextStep.fenBefore, rawToken) ||
+            resolveVariationMove(contextStep.fenAfter, rawToken);
+        }
+        if (resolved) {
+          moveSeg = {
+            type: 'move',
+            content: rawToken,
+            ply: contextPly || 1,
+            fen: resolved.fen,
+            from: resolved.from,
+            to: resolved.to,
+            san: resolved.san,
+            isVariation: true,
+          };
+          runningVarFen = resolved.fen;
+        }
+      }
+
+      if (moveSeg) {
+        if (startIdx > lastIndex) {
+          segments.push({ type: 'text', content: text.slice(lastIndex, startIdx) });
+        }
+        segments.push(moveSeg);
+        lastIndex = startIdx + rawToken.length;
+      }
     }
 
-    const pageRanges = {
-      dagostini_ch1: 'págs. 44–68',
-      dagostini_ch2: 'págs. 92–124',
-      dagostini_ch3: 'págs. 180–218',
-      dagostini_ch4: 'págs. 265–312',
-      nimzo_ch1: 'págs. 15–42',
-      nimzo_ch2: 'págs. 63–98',
-      nimzo_ch3: 'págs. 112–146',
-      tal_ch1: 'págs. 48–86',
-      tal_ch2: 'págs. 134–172',
-      fischer_ch1: 'págs. 210–248',
-      fischer_ch2: 'págs. 340–388',
-    };
+    if (lastIndex < text.length) {
+      segments.push({ type: 'text', content: text.slice(lastIndex) });
+    }
+    return segments;
+  }
 
-    const chId = chapter ? chapter.id : '';
-    return {
-      bookTitle: book ? book.titlePt : 'Xadrez Básico',
-      author: book ? book.author : "Orfeu Gilberto D'Agostini",
-      chapterLabel: chapter ? `Cap. ${chapter.number}: ${chapter.titlePt}` : 'Capítulo 1',
-      pageEstimate: pageRanges[chId] || 'págs. 45–80',
-      sourceFile: book ? book.sourceFileName : 'Xadrez Básico - Orfeu D_Agostini.pdf',
-    };
+  function buildInteractiveBookFlow(game, computedSteps, notationMode) {
+    if (!game) return [];
+    const blocks = [];
+
+    if (game.introPt) {
+      blocks.push({
+        id: `${game.id}-intro`,
+        kind: 'intro',
+        title: 'Contexto da Obra & Ideia Estratégica',
+        startPly: 0,
+        endPly: 0,
+        focusPly: 0,
+        inlineSteps: [],
+        segments: parseParagraphSegments(game.introPt, computedSteps, 1),
+        variationSegments: [],
+      });
+    }
+
+    if (Array.isArray(game.readingSectionsPt)) {
+      game.readingSectionsPt.forEach((sec, idx) => {
+        blocks.push({
+          id: `${game.id}-theory-${idx}`,
+          kind: 'theory',
+          title: sec.headingPt || 'Leitura do Capítulo',
+          startPly: sec.focusPly || 0,
+          endPly: sec.focusPly || 0,
+          focusPly: sec.focusPly || 1,
+          inlineSteps: [],
+          segments: parseParagraphSegments(sec.bodyPt, computedSteps, sec.focusPly || 1),
+          variationSegments: [],
+        });
+      });
+    }
+
+    let buffer = [];
+    for (const step of computedSteps) {
+      buffer.push(step);
+      if (step.annotation && step.annotation.commentPt) {
+        const stepsInPara = [...buffer];
+        buffer = [];
+        const lastPly = step.ply;
+        blocks.push({
+          id: `${game.id}-ply-${lastPly}`,
+          kind: 'annotated',
+          title: null,
+          startPly: stepsInPara[0].ply,
+          endPly: lastPly,
+          focusPly: lastPly,
+          inlineSteps: stepsInPara.map((s) => ({
+            ply: s.ply,
+            moveNumber: s.moveNumber,
+            color: s.color,
+            formatted: formatMoveByMode(s, notationMode),
+            descriptivePt: s.descriptivePt,
+            badge: (s.annotation && s.annotation.badge) || null,
+          })),
+          segments: parseParagraphSegments(step.annotation.commentPt, computedSteps, lastPly),
+          variationSegments: step.annotation.alternativeLinePt
+            ? parseParagraphSegments(step.annotation.alternativeLinePt, computedSteps, lastPly)
+            : [],
+        });
+      }
+    }
+
+    if (buffer.length > 0) {
+      const lastStep = buffer[buffer.length - 1];
+      blocks.push({
+        id: `${game.id}-tail-${lastStep.ply}`,
+        kind: 'tail',
+        title: 'Continuação da Partida',
+        startPly: buffer[0].ply,
+        endPly: lastStep.ply,
+        focusPly: lastStep.ply,
+        inlineSteps: buffer.map((s) => ({
+          ply: s.ply,
+          moveNumber: s.moveNumber,
+          color: s.color,
+          formatted: formatMoveByMode(s, notationMode),
+          descriptivePt: s.descriptivePt,
+          badge: (s.annotation && s.annotation.badge) || null,
+        })),
+        segments: [],
+        variationSegments: [],
+      });
+    }
+
+    return blocks;
   }
 
   // ==========================================================================
-  // 4. ESTADO GLOBAL DA APLICAÇÃO
+  // 5. CONSTRUTOR DE PASSOS DA PARTIDA (CHESS.JS)
   // ==========================================================================
-  const savedRaw = (function () {
-    try {
-      const s = localStorage.getItem(STORAGE_KEY);
-      return s ? JSON.parse(s) : {};
-    } catch (e) {
-      return {};
+  function buildGameSteps(game) {
+    const startFen =
+      game.initialFen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+    const chess = new Chess(startFen);
+    const steps = [];
+    const annotations = game.annotations || {};
+
+    for (let i = 0; i < (game.movesSan || []).length; i++) {
+      const san = game.movesSan[i];
+      const fenBefore = chess.fen();
+      let mv = null;
+      try {
+        mv = chess.move(san, { sloppy: true });
+      } catch {
+        mv = null;
+      }
+      if (!mv) break;
+      const fenAfter = chess.fen();
+      const ply = i + 1;
+      const moveNumber = Math.floor(i / 2) + 1;
+      const moveObj = {
+        ply,
+        moveNumber,
+        color: mv.color,
+        san: mv.san,
+        from: mv.from,
+        to: mv.to,
+        piece: mv.piece,
+        captured: mv.captured,
+        promotion: mv.promotion,
+        fenBefore,
+        fenAfter,
+        inCheck: chess.inCheck ? chess.inCheck() : false,
+        isCheckmate: chess.isCheckmate ? chess.isCheckmate() : false,
+        isCastling: mv.san.startsWith('O-O'),
+      };
+      moveObj.descriptivePt = moveToDescriptive(moveObj, 'pt');
+      moveObj.descriptiveEs = moveToDescriptive(moveObj, 'es');
+      if (annotations[ply]) {
+        moveObj.annotation = annotations[ply];
+      }
+      steps.push(moveObj);
     }
-  })();
+
+    return { initialFen: startFen, steps };
+  }
+
+  // ==========================================================================
+  // 6. ESTADO GLOBAL DA APLICAÇÃO
+  // ==========================================================================
+  const STORAGE_KEY = 'chess_mastery_progress_v3';
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+  } catch {}
 
   const state = {
-    // 4 Destinos na Sidebar: 'learn' | 'library' | 'openings' | 'progress'
-    navDest: 'library',
-    // Quando em 'learn' ou 'progress', permite alternar entre a visão de resumo e o tabuleiro
-    canvasView: 'board', // 'board' | 'overview'
-    // 2 Modos de Uso: 'aprender' (padrão) | 'explorador' (opcional)
-    experienceMode: 'aprender',
-    // Fonte do estudo atual no tabuleiro: 'book_game' | 'opening'
-    studyType: 'book_game',
-    // Aba da coluna direita: 'guidance' | 'movesheet' | 'plan'
-    rightTab: 'guidance',
+    navDest: 'learn', // 'learn' | 'library' | 'openings' | 'achievements'
+    studyType: 'book_game', // 'book_game' | 'opening' | 'custom_study'
+    rightTab: 'book_reader', // 'book_reader' | 'mentors' | 'movesheet'
+    searchQuery: '',
 
-    // Livros, Acordeão e Modo Isolado de Capítulos
-    selectedBookId: PREINSTALLED_BOOKS[0] ? PREINSTALLED_BOOKS[0].id : 'xadrez_basico_dagostini',
-    expandedBookIds: PREINSTALLED_BOOKS.map((b) => b.id), // Todos os 4 livros visíveis/acessíveis
-    isolatedChapterId: null,
+    selectedBookId: PREINSTALLED_BOOKS[0] ? PREINSTALLED_BOOKS[0].id : '',
     selectedGameId:
-      PREINSTALLED_BOOKS[0] &&
-      PREINSTALLED_BOOKS[0].chapters[0] &&
-      PREINSTALLED_BOOKS[0].chapters[0].games[0]
+      PREINSTALLED_BOOKS[0] && PREINSTALLED_BOOKS[0].chapters[0]
         ? PREINSTALLED_BOOKS[0].chapters[0].games[0].id
-        : 'capablanca_steiner_1933',
-
-    // Aberturas & Treinador Inteligente
+        : '',
+    selectedOpeningId: CHESS_OPENINGS[0] ? CHESS_OPENINGS[0].id : '',
     selectedOpeningCat: 'all',
-    selectedOpeningId: CHESS_OPENINGS[0] ? CHESS_OPENINGS[0].id : 'abertura_italiana_giuoco_piano',
+    selectedPhaseFilter: 'all', // 'all' | 'openings' | 'middlegame' | 'endgame' | 'notebooklm'
+
+    customStudies: Array.isArray(saved.customStudies) ? saved.customStudies : [],
+    selectedCustomStudyId: null,
+
     trainerActive: false,
-    trainerColor: 'w', // 'w' | 'b' | 'both'
-    hintLevel: 0, // 0 | 1 | 2 | 3
+    trainerColor: 'w',
+    hintLevel: 0,
     lastFeedback: null,
 
-    // Tabuleiro e Navegação de Lances
+    completedGameIds: Array.isArray(saved.completedGameIds) ? saved.completedGameIds : [],
+    reviewQueue: Array.isArray(saved.reviewQueue) ? saved.reviewQueue : [],
+
+    notationMode: saved.preferredNotation || 'alg_pt',
+    boardTheme: 'stitch_wood',
+    soundMuted: false,
+
     currentPly: 0,
     flipped: false,
-    selectedSquare: null,
     customFen: null,
-    customHistorySan: [],
+    customLastMove: null,
+    customVariationLabel: null,
 
-    // Preferências e Persistência
-    notationMode: savedRaw.preferredNotation || 'alg_pt',
-    soundMuted: false,
-    searchQuery: '',
-    showOcrModal: false,
-    completedGameIds: Array.isArray(savedRaw.completedGameIds) ? savedRaw.completedGameIds : [],
-    reviewQueue: Array.isArray(savedRaw.reviewQueue) ? savedRaw.reviewQueue : [],
-    notesByGameId: savedRaw.notesByGameId || {},
+    // Interação no Tabuleiro (Click-to-move, Drag, Promoção, Setas)
+    selectedSquare: null,
+    pendingPromotion: null,
+    userArrows: [],
+    userHighlights: [],
+    rightClickStart: null,
+    lastAnimatedMoveKey: '',
+
+    // Modal Google NotebookLM
+    isNotebookModalOpen: false,
+    nbPhase: 'openings',
+    nbTitle: 'Abertura Catalã — O Bispo Dragão em g2',
+    nbHeroColor: 'w',
+    nbFen: '',
+    nbText: `# Abertura Catalã — O Bispo Dragão das Brancas em g2\n\nA Abertura Catalã combina a ocupação clássica do centro com 1. d4 Nf6 2. c4 e6 e o fianqueto hipermoderno 3. g3! d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O dxc4.\n\nPara recuperar o peão com iniciativa, as Brancas jogam 7. Qc2! a6 8. a4 Bd7 9. Qxc4 Bc6 10. Bf4 Bd5 11. Qd3 Nc6 12. Nc3 Bxf3 13. Bxf3 Nxd4 14. Bxb7 Ra7 15. Bg2, mantendo pressão duradoura na grande diagonal!`,
   };
 
   function persistState() {
@@ -466,1851 +647,1506 @@
         JSON.stringify({
           completedGameIds: state.completedGameIds,
           reviewQueue: state.reviewQueue,
-          notesByGameId: state.notesByGameId,
+          customStudies: state.customStudies,
           preferredNotation: state.notationMode,
         })
       );
-    } catch (e) {}
+    } catch {}
   }
 
-  // ==========================================================================
-  // 5. SELETORES DE DADOS DERIVADOS
-  // ==========================================================================
-  function getCurrentBookChapterGame() {
+  function getAllBookEntries() {
+    const entries = [];
     for (const book of PREINSTALLED_BOOKS) {
-      for (const chapter of book.chapters) {
-        const game = chapter.games.find((g) => g.id === state.selectedGameId);
-        if (game) return { book, chapter, game };
+      for (const ch of book.chapters || []) {
+        for (const g of ch.games || []) {
+          entries.push({ book, chapter: ch, game: g });
+        }
       }
     }
-    const fallbackBook = PREINSTALLED_BOOKS[0];
-    const fallbackChapter = fallbackBook.chapters[0];
-    return {
-      book: fallbackBook,
-      chapter: fallbackChapter,
-      game: fallbackChapter.games[0],
-    };
+    return entries;
   }
 
-  function getCurrentOpening() {
-    return (
-      CHESS_OPENINGS.find((o) => o.id === state.selectedOpeningId) ||
-      CHESS_OPENINGS[0]
-    );
+  function getCurrentBookEntry() {
+    const all = getAllBookEntries();
+    return all.find((e) => e.game.id === state.selectedGameId) || all[0];
   }
 
-  function getCurrentSteps() {
+  function getActiveUnifiedGame() {
+    if (state.studyType === 'custom_study') {
+      const st =
+        state.customStudies.find((s) => s.id === state.selectedCustomStudyId) ||
+        state.customStudies[0];
+      if (st) return st;
+    }
     if (state.studyType === 'opening') {
-      const op = getCurrentOpening();
-      return buildGameSteps({
+      const op =
+        CHESS_OPENINGS.find((o) => o.id === state.selectedOpeningId) || CHESS_OPENINGS[0];
+      return {
         id: op.id,
         titlePt: op.namePt,
         white: 'Brancas (Teoria)',
         black: 'Pretas (Teoria)',
-        event: `${op.eco} · ${op.nameOriginal}`,
-        year: 'Teoria Clássica',
+        event: `ECO ${op.eco} • ${op.nameOriginal}`,
+        year: 'Repertório',
         result: '1/2-1/2',
         eco: op.eco,
         openingNamePt: op.namePt,
+        studyPhase: 'openings',
         heroColor: op.recommendedFor === 'black' ? 'b' : 'w',
         introPt: op.summaryPt,
+        readingSectionsPt: [
+          {
+            headingPt: 'Estrutura de Peões & Planos dos Dois Lados',
+            bodyPt: `Estrutura: ${op.pawnStructurePt}. Plano das Brancas: ${(
+              op.whitePlansPt || []
+            ).join(' ')} Plano das Pretas: ${(op.blackPlansPt || []).join(' ')}`,
+            focusPly: 1,
+          },
+        ],
         keyTakeawaysPt: [
           ...(op.whitePlansPt || []).slice(0, 2),
           ...(op.blackPlansPt || []).slice(0, 2),
         ],
         movesSan: op.movesSan,
         annotations: op.annotations || {},
-      });
+      };
     }
-    const { game } = getCurrentBookChapterGame();
-    return buildGameSteps(game);
+    return getCurrentBookEntry().game;
   }
 
-  function getActiveFen(initialFen, steps) {
-    if (state.customFen) return state.customFen;
-    if (state.currentPly === 0) return initialFen;
-    const step = steps[state.currentPly - 1];
-    return step ? step.fenAfter : initialFen;
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
-  // Auto-avança o lance do oponente quando o Treinador está ativo em 1 cor
-  let opponentTimer = null;
-  function scheduleOpponentAutoMove(steps) {
-    if (opponentTimer) {
-      clearTimeout(opponentTimer);
-      opponentTimer = null;
-    }
-    if (!state.trainerActive || state.customFen) return;
-    if (state.trainerColor === 'both') return;
-    const nextStep = steps[state.currentPly];
-    if (!nextStep) return;
-    if (nextStep.color !== state.trainerColor) {
-      opponentTimer = setTimeout(() => {
-        state.currentPly = Math.min(steps.length, state.currentPly + 1);
-        chessAudio.playMove(nextStep);
-        render();
-      }, 340);
-    }
+  function squareToCoords(square, flipped) {
+    const f = FILES.indexOf(square[0]);
+    const r = RANKS.indexOf(square[1]);
+    if (f < 0 || r < 0) return { col: 0, row: 0 };
+    return {
+      col: flipped ? 7 - f : f,
+      row: flipped ? 7 - r : r,
+    };
   }
 
   // ==========================================================================
-  // 6. NAVEGAÇÃO DE LANCES & AÇÕES DO TABULEIRO
+  // 7. RENDERIZADOR PRINCIPAL DAS 4 TELAS DO GOOGLE STITCH
   // ==========================================================================
-  function goToPly(targetPly) {
-    const { steps } = getCurrentSteps();
-    const clamped = Math.max(0, Math.min(steps.length, targetPly));
-    state.customFen = null;
-    state.customHistorySan = [];
-    state.selectedSquare = null;
-    state.hintLevel = 0;
-    state.lastFeedback = null;
-    if (clamped > state.currentPly && steps[clamped - 1]) {
-      chessAudio.playMove(steps[clamped - 1]);
-    }
-    state.currentPly = clamped;
-    render();
-  }
+  function renderApp() {
+    const root = document.getElementById('root');
+    if (!root) return;
 
-  function handleSquareClick(sq, activeFen, steps) {
-    const chess = new Chess(activeFen);
+    const allEntries = getAllBookEntries();
+    const currentEntry = getCurrentBookEntry();
+    const activeGame = getActiveUnifiedGame();
+    const { initialFen, steps } = buildGameSteps(activeGame);
+
+    const activeFen = state.customFen
+      ? state.customFen
+      : state.currentPly === 0
+      ? initialFen
+      : (steps[state.currentPly - 1] && steps[state.currentPly - 1].fenAfter) || initialFen;
+
+    const currentStep = state.currentPly > 0 ? steps[state.currentPly - 1] || null : null;
     const nextExpectedStep = steps[state.currentPly] || null;
+    const engineEval = analyzePositionLocal(activeFen);
 
-    if (state.selectedSquare) {
-      if (state.selectedSquare === sq) {
-        state.selectedSquare = null;
-        render();
-        return;
-      }
+    const chess = new Chess(activeFen);
+    const turnColor = chess.turn();
+    const boardMatrix = chess.board();
 
-      const legalMoves = chess.moves({ square: state.selectedSquare, verbose: true });
-      const chosenMove = legalMoves.find((m) => m.to === sq);
+    const totalMagicStars = 12 + state.completedGameIds.length * 3;
+    const progressPct =
+      steps.length > 0 ? Math.round((state.currentPly / steps.length) * 100) : 0;
 
-      if (chosenMove) {
-        const fromSq = state.selectedSquare;
-        state.selectedSquare = null;
-
-        // Se o Treinador estiver ativo, avalia o lance nas 3 faixas
-        if (state.trainerActive && nextExpectedStep && !state.customFen) {
-          const engineEval = analyzePositionLocal(activeFen);
-          const evalResult = evaluateUserMove({
-            fen: activeFen,
-            from: fromSq,
-            to: sq,
-            promotion: 'q',
-            expectedStep: nextExpectedStep,
-            engineEval,
-          });
-
-          if (!evalResult) return;
-          state.lastFeedback = evalResult;
-
-          if (evalResult.accepted) {
-            chessAudio.playSuccess();
-            state.hintLevel = 0;
-            state.currentPly = Math.min(steps.length, state.currentPly + 1);
-          } else {
-            chessAudio.playError();
-            addToReviewQueue(nextExpectedStep, evalResult. headlinePt);
-          }
-          render();
-          return;
-        }
-
-        // Modo de exploração livre no tabuleiro
-        const played = chess.move({ from: fromSq, to: sq, promotion: 'q' });
-        if (played) {
-          // Se o lance jogado coincide com o próximo lance oficial e não estamos em variante livre, avança o ply
-          if (!state.customFen && nextExpectedStep && played.san === nextExpectedStep.san) {
-            state.currentPly += 1;
-            chessAudio.playMove(nextExpectedStep);
-          } else {
-            state.customFen = chess.fen();
-            state.customHistorySan.push(played.san);
-            chessAudio.playMove({
-              captured: played.captured,
-              inCheck: chess.inCheck(),
-              isCastling: played.san.includes('O-O'),
-            });
-          }
-          render();
-          return;
-        }
-      }
-    }
-
-    // Seleciona peça do lado que tem a vez
-    const pieceOnSq = chess.get(sq);
-    if (pieceOnSq && pieceOnSq.color === chess.turn()) {
-      state.selectedSquare = sq;
-      render();
-    } else {
-      state.selectedSquare = null;
-      render();
-    }
-  }
-
-  function addToReviewQueue(expectedStep, reasonPt) {
-    if (!expectedStep) return;
-    const { game } = getCurrentBookChapterGame();
-    const op = getCurrentOpening();
-    const targetId = state.studyType === 'opening' ? op.id : game.id;
-    const titlePt = state.studyType === 'opening' ? op.namePt : game.titlePt;
-    const itemId = `${targetId}_ply_${state.currentPly}`;
-
-    if (state.reviewQueue.some((item) => item.id === itemId)) return;
-    state.reviewQueue.unshift({
-      id: itemId,
-      studyType: state.studyType,
-      targetId,
-      titlePt,
-      ply: state.currentPly,
-      expectedSan: expectedStep.san,
-      expectedSanPt: sanToPortugueseAlgebraic(expectedStep.san),
-      reasonPt,
-    });
-    persistState();
-  }
-
-  // ==========================================================================
-  // 7. RENDERIZADORES DE SEÇÕES DO SHELL FRAMED-SHEET
-  // ==========================================================================
-  function renderSidebarCatalog() {
-    const q = state.searchQuery.trim().toLowerCase();
-
-    // SE DESTINO = ABERTURAS (ou se studyType === 'opening' e navDest === 'openings')
-    if (state.navDest === 'openings') {
-      const filteredOpenings = CHESS_OPENINGS.filter((op) => {
-        const matchesCat =
-          state.selectedOpeningCat === 'all' || op.category === state.selectedOpeningCat;
-        const matchesQuery =
-          !q ||
-          op.namePt.toLowerCase().includes(q) ||
-          op.eco.toLowerCase().includes(q) ||
-          op.summaryPt.toLowerCase().includes(q);
-        return matchesCat && matchesQuery;
-      });
-
-      const catButtonsHtml = [
-        { id: 'all', label: 'Todas (18)' },
-        { id: 'open', label: 'Abertas 1.e4 e5' },
-        { id: 'semi_open', label: 'Semi-abertas' },
-        { id: 'closed', label: 'Fechadas 1.d4 d5' },
-        { id: 'semi_closed', label: 'Defesas Índias' },
-        { id: 'flank', label: 'Flanco' },
-      ]
-        .map(
-          (cat) => `
-          <button
-            type="button"
-            data-action="select-opening-cat"
-            data-cat="${cat.id}"
-            style="
-              padding: 4px 8px;
-              border-radius: 5px;
-              border: 1px solid ${state.selectedOpeningCat === cat.id ? 'var(--text)' : 'var(--border)'};
-              background: ${state.selectedOpeningCat === cat.id ? 'var(--text)' : 'var(--surface)'};
-              color: ${state.selectedOpeningCat === cat.id ? '#fff' : 'var(--muted)'};
-              font-size: 11px;
-              font-weight: 500;
-              cursor: pointer;
-            "
-          >${cat.label}</button>
-        `
-        )
-        .join('');
-
-      const listHtml = filteredOpenings
-        .map((op) => {
-          const isSelected =
-            state.studyType === 'opening' && state.selectedOpeningId === op.id;
-          return `
-            <button
-              type="button"
-              data-action="select-opening"
-              data-opening-id="${op.id}"
-              class="book-accordion ${isSelected ? 'active' : ''}"
-              style="
-                padding: 9px 10px;
-                text-align: left;
-                cursor: pointer;
-                background: ${isSelected ? 'var(--active)' : 'var(--surface)'};
-              "
-            >
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-                <span class="eco-code" style="font-size:11px; font-weight:600; color:var(--accent);">${op.eco}</span>
-                <span style="font-size:11px; color:var(--muted);">${
-                  op.recommendedFor === 'white'
-                    ? 'Brancas'
-                    : op.recommendedFor === 'black'
-                    ? 'Pretas'
-                    : 'Ambas'
-                }</span>
+    // Monta HTML da Barra Superior do Stitch
+    const headerHtml = `
+      <header class="stitch-header">
+        <div class="stitch-header-inner">
+          <div class="brand-group">
+            <div class="brand-logo">♞</div>
+            <div>
+              <div class="brand-title">Chess Mastery</div>
+              <div class="brand-sub">
+                <span class="brand-dot"></span>
+                <span>Estúdio Lúdico & Livro Vivo</span>
               </div>
-              <div style="font-size:12.5px; font-weight:600; color:var(--text); margin-top:2px; line-height:1.3;">
-                ${op.namePt}
-              </div>
-              <div class="mono" style="font-size:11px; color:var(--muted); margin-top:3px;">
-                ${op.movesSan.slice(0, 6).map((m, idx) => (idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}.${sanToPortugueseAlgebraic(m)}` : sanToPortugueseAlgebraic(m))).join(' ')}
-              </div>
+            </div>
+          </div>
+
+          <nav class="stitch-nav">
+            <button type="button" class="stitch-nav-btn ${state.navDest === 'learn' ? 'active' : ''}" data-nav="learn">
+              <span>♟️</span><span>Aprender & Ler</span>
             </button>
+            <button type="button" class="stitch-nav-btn ${state.navDest === 'library' ? 'active' : ''}" data-nav="library">
+              <span>📚</span><span>Biblioteca Mágica</span>
+            </button>
+            <button type="button" class="stitch-nav-btn ${state.navDest === 'openings' ? 'active' : ''}" data-nav="openings">
+              <span>🧭</span><span>Aberturas & Estudos</span>
+            </button>
+            <button type="button" class="stitch-nav-btn ${state.navDest === 'achievements' ? 'active' : ''}" data-nav="achievements">
+              <span>🏆</span><span>Conquistas & Estrelas</span>
+            </button>
+          </nav>
+
+          <div class="header-actions">
+            <button type="button" class="notebook-btn" id="btn-open-notebook-modal" title="Importar Estudos de Abertura, Meio-Jogo e Final do Google NotebookLM">
+              <span>📓</span><span>+ NotebookLM</span>
+            </button>
+
+            <select id="select-notation-mode" class="pill-select" title="Alternar Notação em Tempo Real nos Parágrafos">
+              <option value="alg_pt" ${state.notationMode === 'alg_pt' ? 'selected' : ''}>Notação: Algébrica PT (Cf3)</option>
+              <option value="figurine" ${state.notationMode === 'figurine' ? 'selected' : ''}>Notação: Figurinos (♘f3)</option>
+              <option value="desc_pt" ${state.notationMode === 'desc_pt' ? 'selected' : ''}>Notação: Descritiva (C3BR / P4R)</option>
+              <option value="alg_en" ${state.notationMode === 'alg_en' ? 'selected' : ''}>Notação: Internacional (Nf3)</option>
+            </select>
+
+            <button type="button" class="star-badge-btn" data-nav="achievements" title="Suas Estrelas Mágicas">
+              <span>${totalMagicStars}</span><span>⭐</span>
+            </button>
+
+            <button type="button" class="icon-circle-btn" id="btn-toggle-mute" title="${state.soundMuted ? 'Ativar som' : 'Silenciar som'}">
+              ${state.soundMuted ? '🔇' : '🔊'}
+            </button>
+          </div>
+        </div>
+      </header>
+    `;
+
+    let mainBodyHtml = '';
+
+    // ========================================================================
+    // TELA 1: APRENDER & LER (TABULEIRO CHESS.COM + LIVRO VIVO + 3 MENTORES)
+    // ========================================================================
+    if (state.navDest === 'learn') {
+      const theme = BOARD_THEMES[state.boardTheme] || BOARD_THEMES.stitch_wood;
+      const lastMove = state.customLastMove
+        ? state.customLastMove
+        : currentStep
+        ? { from: currentStep.from, to: currentStep.to }
+        : null;
+
+      // Calcula preenchimento da Barra de Avaliação Vertical
+      const sigmoid = 1 / (1 + Math.exp(-engineEval.scoreCp / 260));
+      const whitePct =
+        engineEval.mateIn !== null
+          ? engineEval.scoreCp >= 0
+            ? 100
+            : 0
+          : Math.min(95, Math.max(5, Math.round(sigmoid * 100)));
+      const evalLabel =
+        engineEval.mateIn !== null
+          ? `M${Math.abs(engineEval.mateIn)}`
+          : `${engineEval.scoreCp > 0 ? '+' : ''}${(engineEval.scoreCp / 100).toFixed(1)}`;
+
+      // Lances legais da casa selecionada
+      let legalMovesFromSelected = [];
+      if (state.selectedSquare) {
+        try {
+          legalMovesFromSelected = chess.moves({ square: state.selectedSquare, verbose: true });
+        } catch {}
+      }
+
+      const displayRows = state.flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+      const displayCols = state.flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+
+      const bookHighlights =
+        !state.customFen && currentStep && currentStep.annotation && currentStep.annotation.highlights
+          ? currentStep.annotation.highlights
+          : [];
+      const allHighlights = [...bookHighlights, ...state.userHighlights];
+
+      const bookArrows =
+        !state.customFen && currentStep && currentStep.annotation && currentStep.annotation.arrows
+          ? currentStep.annotation.arrows
+          : [];
+      const hintArrow =
+        state.hintLevel >= 3 && nextExpectedStep
+          ? [{ from: nextExpectedStep.from, to: nextExpectedStep.to, color: 'sky' }]
+          : [];
+      const allArrows = [...bookArrows, ...state.userArrows, ...hintArrow];
+
+      let squaresHtml = '';
+      for (let vRow = 0; vRow < 8; vRow++) {
+        for (let vCol = 0; vCol < 8; vCol++) {
+          const rIdx = displayRows[vRow];
+          const cIdx = displayCols[vCol];
+          const sq = `${FILES[cIdx]}${RANKS[rIdx]}`;
+          const isLight = (rIdx + cIdx) % 2 === 0;
+          const piece = boardMatrix[rIdx][cIdx];
+          const isLast = lastMove && (lastMove.from === sq || lastMove.to === sq);
+          const isSelected = state.selectedSquare === sq;
+          const legalTarget = legalMovesFromSelected.find((m) => m.to === sq);
+          const customHl = allHighlights.find((h) => h.square === sq);
+
+          let bg = isLight ? theme.light : theme.dark;
+          if (isLast) bg = isLight ? theme.lastLight : theme.lastDark;
+
+          const coordColor = isLight ? theme.dark : theme.light;
+          const badge =
+            !state.customFen &&
+            currentStep &&
+            currentStep.annotation &&
+            currentStep.annotation.badge &&
+            lastMove &&
+            lastMove.to === sq
+              ? currentStep.annotation.badge
+              : null;
+
+          squaresHtml += `
+            <div class="board-sq ${piece && piece.color === turnColor ? 'playable' : ''} ${legalTarget ? 'legal-dest' : ''}"
+                 data-sq="${sq}"
+                 style="background-color:${bg}">
+              ${isSelected ? `<div style="position:absolute;inset:0;background:rgba(22,134,94,0.34);box-shadow:inset 0 0 0 3px #16865E;pointer-events:none"></div>` : ''}
+              ${
+                customHl
+                  ? `<div style="position:absolute;inset:0;background:${
+                      customHl.color === 'rose'
+                        ? 'rgba(244,63,94,0.42)'
+                        : customHl.color === 'amber'
+                        ? 'rgba(245,158,11,0.45)'
+                        : customHl.color === 'sky'
+                        ? 'rgba(59,130,246,0.42)'
+                        : 'rgba(22,134,94,0.42)'
+                    };pointer-events:none"></div>`
+                  : ''
+              }
+              ${vCol === 0 ? `<span class="sq-coord-rank" style="color:${coordColor}">${RANKS[rIdx]}</span>` : ''}
+              ${vRow === 7 ? `<span class="sq-coord-file" style="color:${coordColor}">${FILES[cIdx]}</span>` : ''}
+              ${
+                piece
+                  ? `<div class="piece-wrap" data-piece-sq="${sq}">${getPieceSvg(piece.color, piece.type)}</div>`
+                  : ''
+              }
+              ${
+                legalTarget
+                  ? piece
+                    ? `<div class="legal-ring"></div>`
+                    : `<div class="legal-dot"></div>`
+                  : ''
+              }
+              ${
+                badge
+                  ? `<div class="move-eval-badge" style="background:${
+                      badge === '!!' ? '#06b6d4' : badge === '!' ? '#16865E' : '#F59E0B'
+                    }">${escapeHtml(badge)}</div>`
+                  : ''
+              }
+            </div>
           `;
-        })
-        .join('');
-
-      return `
-        <div class="group-label" style="margin-top:2px;">Famílias de aberturas</div>
-        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
-          ${catButtonsHtml}
-        </div>
-        <div style="display:flex; flex-direction:column; gap:5px;">
-          ${listHtml || `<div class="empty-box">Nenhuma abertura encontrada para "${state.searchQuery}".</div>`}
-        </div>
-      `;
-    }
-
-    // MODO ISOLADO DE CAPÍTULO (Pedido explícito do usuário: "Ao clicar sobre um livro o drop down abriria os capitulos e estes pudessem ser acessados de modo isolado")
-    if (state.isolatedChapterId) {
-      let foundBook = null;
-      let foundChapter = null;
-      for (const b of PREINSTALLED_BOOKS) {
-        const ch = b.chapters.find((c) => c.id === state.isolatedChapterId);
-        if (ch) {
-          foundBook = b;
-          foundChapter = ch;
-          break;
         }
       }
 
-      if (foundBook && foundChapter) {
-        const gamesHtml = foundChapter.games
-          .map((g) => {
-            const isSelected =
-              state.studyType === 'book_game' && state.selectedGameId === g.id;
-            const isDone = state.completedGameIds.includes(g.id);
-            return `
-              <button
-                type="button"
-                data-action="select-game"
-                data-book-id="${foundBook.id}"
-                data-game-id="${g.id}"
-                class="game-item-btn ${isSelected ? 'selected' : ''}"
-                style="border: 1px solid ${isSelected ? 'var(--control)' : 'var(--border)'}; background: ${isSelected ? 'var(--active)' : 'var(--surface)'}; padding: 9px 10px; flex-direction: column; align-items: flex-start; gap: 3px;"
-              >
-                <div style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:6px;">
-                  <span style="font-size:12.5px; font-weight:600; color:var(--text);">${g.titlePt}</span>
-                  ${isDone ? `<span class="pill pos" style="height:18px; font-size:10px; padding:0 6px;">Concluído</span>` : ''}
-                </div>
-                <div style="font-size:11px; color:var(--muted);">
-                  ${g.white} vs. ${g.black} · <span class="mono">${g.year}</span>
-                </div>
+      // Setas SVG sobre o tabuleiro
+      let arrowsSvgHtml = '';
+      if (allArrows.length > 0) {
+        const lines = allArrows
+          .map((ar) => {
+            const st = squareToCoords(ar.from, state.flipped);
+            const en = squareToCoords(ar.to, state.flipped);
+            const x1 = st.col * 100 + 50;
+            const y1 = st.row * 100 + 50;
+            const x2 = en.col * 100 + 50;
+            const y2 = en.row * 100 + 50;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const len = Math.hypot(dx, dy) || 1;
+            const tx = x2 - (dx / len) * 20;
+            const ty = y2 - (dy / len) * 20;
+            const col = ar.color || 'emerald';
+            const strokeMap = {
+              emerald: 'rgba(22, 134, 94, 0.88)',
+              rose: 'rgba(244, 63, 94, 0.88)',
+              amber: 'rgba(245, 158, 11, 0.88)',
+              sky: 'rgba(59, 130, 246, 0.88)',
+            };
+            return `<line x1="${x1}" y1="${y1}" x2="${tx}" y2="${ty}" stroke="${strokeMap[col] || strokeMap.emerald}" stroke-width="18" stroke-linecap="round" marker-end="url(#arr-${col})" />`;
+          })
+          .join('');
+
+        arrowsSvgHtml = `
+          <svg viewBox="0 0 800 800" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:20">
+            <defs>
+              <marker id="arr-emerald" markerWidth="4.2" markerHeight="4.2" refX="2.6" refY="2.1" orient="auto"><polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(22, 134, 94, 0.92)"/></marker>
+              <marker id="arr-rose" markerWidth="4.2" markerHeight="4.2" refX="2.6" refY="2.1" orient="auto"><polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(244, 63, 94, 0.92)"/></marker>
+              <marker id="arr-amber" markerWidth="4.2" markerHeight="4.2" refX="2.6" refY="2.1" orient="auto"><polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(245, 158, 11, 0.92)"/></marker>
+              <marker id="arr-sky" markerWidth="4.2" markerHeight="4.2" refX="2.6" refY="2.1" orient="auto"><polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(59, 130, 246, 0.92)"/></marker>
+            </defs>
+            ${lines}
+          </svg>
+        `;
+      }
+
+      // Popover de Promoção de Peão (Chess.com style)
+      let promoHtml = '';
+      if (state.pendingPromotion) {
+        const pCoords = squareToCoords(state.pendingPromotion.to, state.flipped);
+        promoHtml = `
+          <div class="promo-popover" style="left:${pCoords.col * 12.5}%;top:${pCoords.row === 0 ? '0%' : '50%'}">
+            ${['q', 'n', 'r', 'b']
+              .map(
+                (p) => `
+              <button type="button" class="promo-btn" data-promo="${p}">
+                <div style="width:80%;height:80%">${getPieceSvg(state.pendingPromotion.color, p)}</div>
               </button>
+            `
+              )
+              .join('')}
+          </div>
+        `;
+      }
+
+      // Constrói painel direito: Livro Interativo, 3 Mentores ou Planilha
+      let rightColumnContentHtml = '';
+
+      if (state.rightTab === 'book_reader') {
+        const blocks = buildInteractiveBookFlow(activeGame, steps, state.notationMode);
+
+        const renderSegmentsHtml = (segments, fallbackPly) => {
+          return segments
+            .map((seg) => {
+              if (seg.type === 'text') return escapeHtml(seg.content);
+              const isMainActive =
+                !seg.isVariation && !state.customFen && seg.ply === state.currentPly;
+              const isVarActive =
+                seg.isVariation && state.customFen && seg.fen === state.customFen;
+              if (seg.isVariation) {
+                return `<button type="button" class="inline-move-chip variation ${isVarActive ? 'active' : ''}" data-var-fen="${escapeHtml(seg.fen)}" data-var-from="${escapeHtml(seg.from)}" data-var-to="${escapeHtml(seg.to)}" data-var-label="${escapeHtml(seg.content)}" data-var-ply="${seg.ply || fallbackPly}" title="Clique para ver esta variante no tabuleiro">♟ ${escapeHtml(seg.content)}</button>`;
+              }
+              return `<button type="button" class="inline-move-chip ${isMainActive ? 'active' : ''}" data-jump-ply="${seg.ply}" title="Clique para ver este movimento em tempo real no tabuleiro">♟ ${escapeHtml(seg.content)}</button>`;
+            })
+            .join('');
+        };
+
+        const blocksHtml = blocks
+          .map((b) => {
+            const isActiveBlock =
+              !state.customFen &&
+              state.currentPly > 0 &&
+              (b.focusPly === state.currentPly ||
+                (state.currentPly >= b.startPly &&
+                  state.currentPly <= b.endPly &&
+                  b.startPly > 0));
+
+            const ribbonHtml =
+              b.inlineSteps && b.inlineSteps.length > 0
+                ? `<div class="passage-moves-ribbon">
+                    ${b.inlineSteps
+                      .map((st, idx) => {
+                        const isAct = !state.customFen && state.currentPly === st.ply;
+                        const showNum = st.color === 'w' || idx === 0;
+                        return `<button type="button" class="ribbon-move-btn ${isAct ? 'active' : ''}" data-jump-ply="${st.ply}" title="Ir para ${st.moveNumber}${st.color === 'w' ? '.' : '...'} ${escapeHtml(st.formatted)} (Descritiva: ${escapeHtml(st.descriptivePt)})">
+                          ${showNum ? `<span style="opacity:0.75;font-size:11px">${st.moveNumber}${st.color === 'w' ? '.' : '...'}</span>` : ''}
+                          <span>${escapeHtml(st.formatted)}</span>
+                          ${st.badge ? `<span style="font-size:11px;padding:0 4px;border-radius:4px;background:rgba(245,158,11,0.25)">${escapeHtml(st.badge)}</span>` : ''}
+                        </button>`;
+                      })
+                      .join('')}
+                  </div>`
+                : '';
+
+            const varBoxHtml =
+              b.variationSegments && b.variationSegments.length > 0
+                ? `<div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--sky-soft);border:1px solid var(--sky-border);font-size:13.5px;color:var(--sky-ink)">
+                    <div style="font-size:11px;font-weight:800;text-transform:uppercase;margin-bottom:4px">🧭 Variante Comentada no Livro (Clique nos lances):</div>
+                    <div>${renderSegmentsHtml(b.variationSegments, b.focusPly || 1)}</div>
+                  </div>`
+                : '';
+
+            return `
+              <article class="book-passage-card ${isActiveBlock ? 'active' : ''} ${b.kind === 'intro' || b.kind === 'theory' ? 'theory' : ''}">
+                ${b.title ? `<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--primary);margin-bottom:6px;letter-spacing:0.04em">${escapeHtml(b.title)}</div>` : ''}
+                ${ribbonHtml}
+                ${b.segments.length > 0 ? `<p class="book-paragraph-text">${renderSegmentsHtml(b.segments, b.focusPly || 1)}</p>` : ''}
+                ${varBoxHtml}
+              </article>
             `;
           })
           .join('');
 
-        return `
-          <button
-            type="button"
-            data-action="exit-isolated-chapter"
-            class="btn"
-            style="width:100%; justify-content:flex-start; margin-bottom:6px; height:30px; font-size:12px;"
-          >
-            ${ICONS.arrowLeft} Voltar aos 4 livros
-          </button>
-          <div class="panel" style="padding:12px; background:var(--surface);">
-            <div class="panel-meta">${foundBook.titlePt} · ${foundBook.author}</div>
-            <div style="font-size:14px; font-weight:600; color:var(--text); margin-top:3px;">
-              Capítulo ${foundChapter.number}: ${foundChapter.titlePt}
-            </div>
-            <p style="font-size:12px; color:var(--muted); margin-top:4px; line-height:1.4;">
-              ${foundChapter.subtitlePt}
-            </p>
-            <div class="group-label" style="margin:10px 0 6px;">Estudos deste capítulo (${foundChapter.games.length})</div>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              ${gamesHtml}
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    // ACORDEÃO DE TODOS OS 4 LIVROS CARREGADOS NA ABA LATERAL ESQUERDA
-    const booksHtml = PREINSTALLED_BOOKS.map((book) => {
-      const isExpanded = state.expandedBookIds.includes(book.id) || Boolean(q);
-      const totalGames = book.chapters.reduce((acc, c) => acc + c.games.length, 0);
-
-      const chaptersHtml = book.chapters
-        .map((ch) => {
-          const matchingGames = ch.games.filter(
-            (g) =>
-              !q ||
-              g.titlePt.toLowerCase().includes(q) ||
-              g.white.toLowerCase().includes(q) ||
-              g.black.toLowerCase().includes(q) ||
-              ch.titlePt.toLowerCase().includes(q) ||
-              book.titlePt.toLowerCase().includes(q)
-          );
-          if (q && matchingGames.length === 0) return '';
-
-          const gameRows = matchingGames
-            .map((g) => {
-              const isSelected =
-                state.studyType === 'book_game' && state.selectedGameId === g.id;
-              const isDone = state.completedGameIds.includes(g.id);
-              return `
-                <button
-                  type="button"
-                  data-action="select-game"
-                  data-book-id="${book.id}"
-                  data-game-id="${g.id}"
-                  class="game-item-btn ${isSelected ? 'selected' : ''}"
-                >
-                  <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${g.titlePt}</span>
-                  <span class="mono" style="font-size:10.5px; color:var(--faint); flex-shrink:0;">${isDone ? 'OK' : g.year}</span>
-                </button>
-              `;
-            })
-            .join('');
-
-          return `
-            <div style="background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:6px;">
-              <button
-                type="button"
-                data-action="isolate-chapter"
-                data-book-id="${book.id}"
-                data-chapter-id="${ch.id}"
-                class="chapter-row-btn"
-                style="padding:4px 6px;"
-                title="Abrir este capítulo em modo isolado"
-              >
-                <div>
-                  <div class="chapter-row-title">Cap. ${ch.number} · ${ch.titlePt}</div>
-                  <div class="chapter-row-sub">Isolar capítulo (${ch.games.length} estudos)</div>
-                </div>
-                <span style="width:14px; height:14px; color:var(--muted);">${ICONS.chevronRight}</span>
-              </button>
-              <div style="margin-top:4px; padding-top:4px; border-top:1px solid var(--rule); display:flex; flex-direction:column; gap:2px;">
-                ${gameRows}
+        rightColumnContentHtml = `
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:#FFF9ED;border:1px solid var(--border-warm);border-radius:18px;padding:13px 16px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+                <span style="font-size:11px;font-weight:800;text-transform:uppercase;color:var(--primary);background:var(--mint-soft);padding:2px 10px;border-radius:999px">
+                  📖 Livro Vivo • Lances Clicáveis nos Parágrafos
+                </span>
+                <span style="font-size:12px;font-weight:700;color:var(--muted)">
+                  ${escapeHtml(activeGame.white)} vs. ${escapeHtml(activeGame.black)}
+                </span>
+              </div>
+              <div style="font-size:12.5px;color:var(--on-surface-variant)">
+                Clique em <strong>qualquer movimento verde ou âmbar dentro dos parágrafos</strong> para ver a jogada acontecer em tempo real no tabuleiro!
               </div>
             </div>
+
+            ${
+              state.customFen
+                ? `<div style="background:var(--amber-soft);border:2px solid var(--amber-vibrant);border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <div>
+                      <div style="font-size:13px;font-weight:800;color:var(--amber-ink)">🔍 Explorando Posição Alternativa: ${escapeHtml(state.customVariationLabel || 'Variante no Tabuleiro')}</div>
+                      <div style="font-size:11.5px;color:#855300">Você pode continuar mexendo as peças ou voltar ao ponto exato da leitura.</div>
+                    </div>
+                    <button type="button" class="tactile-btn primary" id="btn-return-mainline" style="height:34px;font-size:12px;flex-shrink:0">↩ Voltar ao Livro</button>
+                  </div>`
+                : ''
+            }
+
+            <div class="book-reader-scroll">
+              ${blocksHtml}
+            </div>
+          </div>
+        `;
+      } else if (state.rightTab === 'mentors') {
+        const piecePt = nextExpectedStep
+          ? PIECE_NAMES_PT[nextExpectedStep.piece] || 'Peça'
+          : 'Peça';
+        const expectedMovePt = nextExpectedStep
+          ? sanToPortugueseAlgebraic(nextExpectedStep.san)
+          : '-';
+        const hintText =
+          state.hintLevel <= 1
+            ? (nextExpectedStep &&
+                nextExpectedStep.annotation &&
+                nextExpectedStep.annotation.hintPt) ||
+              'Observe as casas centrais e descubra qual peça pode melhorar sua posição ou criar uma ameaça tática!'
+            : state.hintLevel === 2
+            ? `Dica de Peça: Olhe com carinho para o seu ${piecePt} na casa ${
+                nextExpectedStep ? nextExpectedStep.from : ''
+              } rumo à casa ${nextExpectedStep ? nextExpectedStep.to : ''}!`
+            : `Solução Explicada: Jogue ${expectedMovePt}! ${
+                (nextExpectedStep &&
+                  nextExpectedStep.annotation &&
+                  nextExpectedStep.annotation.commentPt) ||
+                ''
+              }`;
+
+        rightColumnContentHtml = `
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <article class="mentor-card owl">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <div class="mentor-avatar" style="background:var(--amber-soft)">🦉</div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                    <strong style="font-size:16px;color:#855300">A Coruja Sofia pergunta:</strong>
+                    <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--amber-soft);color:var(--amber-ink)">Tutora Chefe</span>
+                  </div>
+                  <p style="font-size:14.5px;line-height:1.6;color:var(--on-surface)">${escapeHtml(hintText)}</p>
+                  <div style="display:flex;gap:6px;margin-top:10px">
+                    <button type="button" class="tactile-btn" data-set-hint="1" style="height:32px;font-size:12px">1. Pergunta</button>
+                    <button type="button" class="tactile-btn" data-set-hint="2" style="height:32px;font-size:12px">2. Peça & Casa</button>
+                    <button type="button" class="tactile-btn" data-set-hint="3" style="height:32px;font-size:12px">3. Ver Solução</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="mentor-card book">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <div class="mentor-avatar" style="background:var(--mint-soft)">📖</div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                    <strong style="font-size:16px;color:var(--primary)">O Livro Mágico conta:</strong>
+                    <span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--mint-soft);color:var(--primary)">${escapeHtml(currentEntry.book.author)}</span>
+                  </div>
+                  <p style="font-size:14px;line-height:1.65;background:#fff;padding:10px 12px;border-radius:14px;border:1px solid #BBF7D0">
+                    “${escapeHtml((currentStep && currentStep.annotation && currentStep.annotation.commentPt) || activeGame.introPt)}”
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="mentor-card robot">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <div class="mentor-avatar" style="background:#DBEAFE">🤖</div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                    <strong style="font-size:16px;color:var(--sky-ink)">O Robô Pipo analisou:</strong>
+                    <span style="font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:#DBEAFE;color:var(--sky-ink)">Avaliação: ${evalLabel}</span>
+                  </div>
+                  <p style="font-size:14px;line-height:1.6">${escapeHtml(engineEval.explanationPt)}</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        `;
+      } else {
+        // Planilha completa de lances
+        let rowsHtml = '';
+        for (let i = 0; i < Math.ceil(steps.length / 2); i++) {
+          const w = steps[i * 2];
+          const b = steps[i * 2 + 1];
+          rowsHtml += `
+            <div style="display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;padding:6px 10px;border-radius:10px;background:${i % 2 === 0 ? 'var(--canvas-cream)' : '#fff'}">
+              <span style="font-size:12px;font-weight:800;color:var(--muted)">${i + 1}.</span>
+              ${w ? `<button type="button" class="ribbon-move-btn ${!state.customFen && state.currentPly === w.ply ? 'active' : ''}" data-jump-ply="${w.ply}" style="justify-content:space-between">${escapeHtml(formatMoveByMode(w, state.notationMode))} ${w.annotation && w.annotation.badge ? `<span>${escapeHtml(w.annotation.badge)}</span>` : ''}</button>` : '<span></span>'}
+              ${b ? `<button type="button" class="ribbon-move-btn ${!state.customFen && state.currentPly === b.ply ? 'active' : ''}" data-jump-ply="${b.ply}" style="justify-content:space-between">${escapeHtml(formatMoveByMode(b, state.notationMode))} ${b.annotation && b.annotation.badge ? `<span>${escapeHtml(b.annotation.badge)}</span>` : ''}</button>` : '<span></span>'}
+            </div>
           `;
-        })
+        }
+        rightColumnContentHtml = `
+          <div class="stitch-card" style="max-height:580px;overflow-y:auto">
+            <div style="font-size:14px;font-weight:800;margin-bottom:10px">Planilha Completa de Lances (${steps.length} plies)</div>
+            <div style="display:flex;flex-direction:column;gap:4px">${rowsHtml}</div>
+          </div>
+        `;
+      }
+
+      // Opções do Seletor de Livros e Capítulos completos
+      const booksOptionsHtml = PREINSTALLED_BOOKS.map(
+        (b) =>
+          `<option value="${b.id}" ${currentEntry.book.id === b.id ? 'selected' : ''}>📖 ${escapeHtml(b.titlePt)} (${b.chapters.length} capítulos)</option>`
+      ).join('');
+
+      const chaptersGamesOptionsHtml = currentEntry.book.chapters
+        .map(
+          (ch) => `
+          <optgroup label="Capítulo ${ch.number}: ${escapeHtml(ch.titlePt)}">
+            ${ch.games
+              .map(
+                (gm) =>
+                  `<option value="${gm.id}" ${gm.id === state.selectedGameId ? 'selected' : ''}>${escapeHtml(gm.titlePt)}</option>`
+              )
+              .join('')}
+          </optgroup>
+        `
+        )
         .join('');
 
-      if (q && !chaptersHtml.trim()) return '';
-
-      return `
-        <div class="book-accordion ${state.selectedBookId === book.id ? 'active' : ''}">
-          <button
-            type="button"
-            data-action="toggle-book"
-            data-book-id="${book.id}"
-            class="book-header-btn"
-          >
-            <div style="min-width:0;">
-              <div class="book-title">${book.titlePt}</div>
-              <div class="book-author">${book.author} · <span class="mono">${book.chapters.length} caps · ${totalGames} estudos</span></div>
+      mainBodyHtml = `
+        <section class="stitch-card context-banner">
+          <div style="max-width:820px">
+            <div class="breadcrumb-row">
+              <span style="color:var(--primary)">📚 ${escapeHtml(state.studyType === 'opening' ? 'Repertório de Aberturas' : state.studyType === 'custom_study' ? 'Caderno Google NotebookLM' : `${currentEntry.book.titlePt} • Cap. ${currentEntry.chapter.number}`)}</span>
+              <span>•</span>
+              <span>${escapeHtml(activeGame.white)} vs. ${escapeHtml(activeGame.black)}</span>
+              <span>•</span>
+              <span style="background:#e6eeff;color:var(--sky-ink);padding:2px 9px;border-radius:999px;font-size:11px">Lance ${state.currentPly} de ${steps.length}</span>
             </div>
-            <span style="width:15px; height:15px; color:var(--muted); transform:rotate(${isExpanded ? '180deg' : '0deg'}); transition:transform 150ms ease;">
-              ${ICONS.chevronDown}
-            </span>
-          </button>
-          ${isExpanded ? `<div class="book-chapters-list">${chaptersHtml}</div>` : ''}
-        </div>
-      `;
-    }).join('');
+            <h1 class="lesson-title">${escapeHtml(activeGame.titlePt)}</h1>
 
-    return `
-      <div class="group-label" style="margin-top:2px;">Livros clássicos carregados (4)</div>
-      ${booksHtml}
-    `;
-  }
-
-  // ==========================================================================
-  // 8. RENDERIZADOR DO TABULEIRO E SETAS VETORIAIS
-  // ==========================================================================
-  function renderBoardStage(activeFen, steps, currentStep, nextExpectedStep, engineEval) {
-    const chess = new Chess(activeFen);
-    const boardGrid = chess.board();
-    const legalMovesForSelected = state.selectedSquare
-      ? chess.moves({ square: state.selectedSquare, verbose: true })
-      : [];
-
-    const rankOrder = state.flipped ? [...RANKS].reverse() : RANKS;
-    const fileOrder = state.flipped ? [...FILES].reverse() : FILES;
-
-    // Casas destacadas pela anotação ou pelo último lance
-    const highlightMap = {};
-    if (currentStep && !state.customFen) {
-      highlightMap[currentStep.from] = 'rgba(27, 108, 128, 0.24)';
-      highlightMap[currentStep.to] = 'rgba(27, 108, 128, 0.34)';
-      if (currentStep.annotation && Array.isArray(currentStep.annotation.highlights)) {
-        currentStep.annotation.highlights.forEach((h) => {
-          highlightMap[h.square] = 'rgba(30, 123, 79, 0.28)';
-        });
-      }
-    }
-    if (state.hintLevel >= 2 && nextExpectedStep) {
-      highlightMap[nextExpectedStep.from] = 'rgba(184, 125, 20, 0.35)';
-      if (state.hintLevel >= 3) {
-        highlightMap[nextExpectedStep.to] = 'rgba(30, 123, 79, 0.38)';
-      }
-    }
-
-    let squaresHtml = '';
-    for (let rIdx = 0; rIdx < 8; rIdx++) {
-      for (let fIdx = 0; fIdx < 8; fIdx++) {
-        const rank = rankOrder[rIdx];
-        const file = fileOrder[fIdx];
-        const sq = `${file}${rank}`;
-        const fileNum = FILES.indexOf(file);
-        const rankNum = RANKS.indexOf(rank);
-        const isLight = (fileNum + rankNum) % 2 === 0;
-        const baseBg = isLight ? 'var(--board-light)' : 'var(--board-dark)';
-        const isSelected = state.selectedSquare === sq;
-        const legalMove = legalMovesForSelected.find((m) => m.to === sq);
-        const piece = boardGrid[rankNum][fileNum];
-        const pieceCode = piece ? `${piece.color}${piece.type.toUpperCase()}` : null;
-
-        const overlayBg = isSelected
-          ? 'rgba(27, 108, 128, 0.42)'
-          : highlightMap[sq] || 'transparent';
-
-        const showRankCoord = fIdx === 0;
-        const showFileCoord = rIdx === 7;
-        const coordColor = isLight ? '#5c4632' : '#f3ead8';
-
-        squaresHtml += `
-          <div
-            class="chess-square"
-            data-action="square-click"
-            data-square="${sq}"
-            style="background:${baseBg};"
-          >
-            <div style="position:absolute; inset:0; background:${overlayBg}; pointer-events:none;"></div>
             ${
-              showRankCoord
-                ? `<span class="coord-label" style="top:3px; left:4px; color:${coordColor};">${rank}</span>`
-                : ''
-            }
-            ${
-              showFileCoord
-                ? `<span class="coord-label" style="bottom:2px; right:4px; color:${coordColor};">${file}</span>`
-                : ''
-            }
-            ${pieceCode && PIECE_SVGS[pieceCode] ? PIECE_SVGS[pieceCode] : ''}
-            ${
-              legalMove
-                ? piece
-                  ? `<div class="legal-ring"></div>`
-                  : `<div class="legal-dot"></div>`
+              state.studyType === 'book_game'
+                ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+                    <select id="select-book-quick" class="pill-select">${booksOptionsHtml}</select>
+                    <select id="select-game-quick" class="pill-select" style="max-width:440px">${chaptersGamesOptionsHtml}</select>
+                  </div>`
                 : ''
             }
           </div>
-        `;
-      }
-    }
 
-    // Setas SVG sobre o tabuleiro (anotação do livro/abertura ou dica nível 3)
-    const arrows = [];
-    if (currentStep && currentStep.annotation && Array.isArray(currentStep.annotation.arrows)) {
-      currentStep.annotation.arrows.forEach((a) => arrows.push({ from: a.from, to: a.to, color: '#1b6c80' }));
-    }
-    if (state.hintLevel >= 3 && nextExpectedStep) {
-      arrows.push({ from: nextExpectedStep.from, to: nextExpectedStep.to, color: '#1e7b4f' });
-    }
-
-    const squareCenter = (sq) => {
-      const f = fileOrder.indexOf(sq[0]);
-      const r = rankOrder.indexOf(sq[1]);
-      return { x: f * 12.5 + 6.25, y: r * 12.5 + 6.25 };
-    };
-
-    const arrowsSvg = arrows
-      .map((a, idx) => {
-        const p1 = squareCenter(a.from);
-        const p2 = squareCenter(a.to);
-        return `
-          <defs>
-            <marker id="arr-${idx}" markerWidth="4" markerHeight="4" refX="2.6" refY="2" orient="auto">
-              <path d="M0,0 L4,2 L0,4 Z" fill="${a.color}" />
-            </marker>
-          </defs>
-          <line
-            x1="${p1.x}" y1="${p1.y}"
-            x2="${p2.x}" y2="${p2.y}"
-            stroke="${a.color}"
-            stroke-width="1.85"
-            stroke-linecap="round"
-            opacity="0.86"
-            marker-end="url(#arr-${idx})"
-          />
-        `;
-      })
-      .join('');
-
-    // Barra de Avaliação Vertical (visível no Modo Explorador)
-    const scorePawns = (engineEval.scoreCp / 100).toFixed(1);
-    const whitePct = Math.max(6, Math.min(94, 50 + engineEval.scoreCp / 14));
-    const evalBarHtml =
-      state.experienceMode === 'explorador'
-        ? `
-          <div class="eval-bar" title="Avaliação Stockfish Local: ${engineEval.scoreCp >= 0 ? '+' : ''}${scorePawns}">
-            <div class="eval-bar-white" style="height:${state.flipped ? 100 - whitePct : whitePct}%;"></div>
-            <span class="eval-score-tag" style="bottom:4px; color:${whitePct > 50 ? '#131416' : '#f5f6f7'};">
-              ${engineEval.scoreCp >= 0 ? '+' : ''}${scorePawns}
-            </span>
-          </div>
-        `
-        : '';
-
-    const progressPct =
-      steps.length > 0 ? Math.round((state.currentPly / steps.length) * 100) : 0;
-
-    const turnLabel = chess.turn() === 'w' ? 'Vez das Brancas' : 'Vez das Pretas';
-    const lastMoveLabel = currentStep
-      ? `Último lance: ${currentStep.moveNumber}${currentStep.color === 'w' ? '.' : '...'} ${formatMoveByMode(currentStep, state.notationMode)}`
-      : 'Posição inicial pronta';
-
-    return `
-      <div class="board-stage-column">
-        <div class="board-stage-top">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="pill ${chess.turn() === 'w' ? 'neutral' : 'info'}">${turnLabel}</span>
-            <span class="mono" style="font-size:12px; color:var(--muted);">${lastMoveLabel}</span>
-            ${
-              state.customFen
-                ? `<span class="pill warn">Exploração livre no tabuleiro</span>`
-                : ''
-            }
-          </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            ${
-              state.customFen
-                ? `<button type="button" data-action="return-official-line" class="btn accent-outline" style="height:28px; font-size:12px;">Retomar linha oficial</button>`
-                : ''
-            }
-            <button type="button" data-action="flip-board" class="btn" style="height:28px; padding:0 9px; font-size:12px;" title="Girar tabuleiro (Tecla X)">
-              ${ICONS.flip} Girar
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+            <button type="button" class="tactile-btn ${!state.trainerActive ? 'primary' : ''}" id="btn-mode-read" style="border-radius:999px;padding:0 14px">
+              📖 Modo Leitura & Clique
             </button>
-          </div>
-        </div>
-
-        <div class="board-center-wrap">
-          ${evalBarHtml}
-          <div class="board-frame">
-            <div class="chess-board">
-              ${squaresHtml}
-              <svg viewBox="0 0 100 100" style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
-                ${arrowsSvg}
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div class="board-stage-bottom">
-          <div class="progress-row">
-            <span class="mono" style="font-size:11.5px; color:var(--muted);">Lance ${state.currentPly} de ${steps.length}</span>
-            <div class="progress-track">
-              <div class="progress-fill" style="width:${progressPct}%;"></div>
-            </div>
-            <span class="mono" style="font-size:11.5px; color:var(--muted);">${progressPct}%</span>
-          </div>
-
-          <div class="controls-bar">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" data-action="ply-first" class="btn" ${state.currentPly === 0 ? 'disabled' : ''} title="Início (Home)">
-                ${ICONS.skipBack}
-              </button>
-              <button type="button" data-action="ply-prev" class="btn" ${state.currentPly === 0 ? 'disabled' : ''} title="Lance anterior (Seta Esquerda)">
-                ${ICONS.chevronLeft} Anterior
-              </button>
-            </div>
-
-            <button
-              type="button"
-              data-action="cycle-hint"
-              class="btn accent-outline"
-              ${!nextExpectedStep ? 'disabled' : ''}
-              title="Dica progressiva em 3 níveis (Tecla H)"
-            >
-              ${ICONS.bulb} Ver dica ${state.hintLevel > 0 ? `(${state.hintLevel}/3)` : ''}
+            <button type="button" class="tactile-btn ${state.trainerActive ? 'primary' : ''}" id="btn-mode-challenge" style="border-radius:999px;padding:0 14px">
+              🎯 Desafio: Adivinhe o Lance
             </button>
-
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" data-action="ply-next" class="btn primary" ${state.currentPly >= steps.length ? 'disabled' : ''} title="Próximo lance (Seta Direita)">
-                Próximo ${ICONS.chevronRight}
-              </button>
-              <button type="button" data-action="ply-last" class="btn" ${state.currentPly >= steps.length ? 'disabled' : ''} title="Final (End)">
-                ${ICONS.skipForward}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ==========================================================================
-  // 9. RENDERIZADOR DA COLUNA DIREITA (3 FONTES SEPARADAS, PLANILHA E PLANOS)
-  // ==========================================================================
-  function renderGuidanceColumn({
-    book,
-    chapter,
-    game,
-    opening,
-    steps,
-    currentStep,
-    nextExpectedStep,
-    engineEval,
-    hints,
-    citation,
-  }) {
-    // Seletor de Notação (sempre disponível no Modo Explorador)
-    const notationSelectorHtml =
-      state.experienceMode === 'explorador'
-        ? `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; background:var(--raised); border:1px solid var(--border); border-radius:var(--radius-card);">
-            <span style="font-size:12px; color:var(--muted); font-weight:500;">Sistema de notação</span>
-            <div class="segmented">
-              ${[
-                { id: 'alg_pt', label: 'Algébrica PT (Cf3)' },
-                { id: 'figurine', label: 'Figurino' },
-                { id: 'desc_pt', label: 'Descritiva C3BR' },
-                { id: 'desc_es', label: 'Espanhol C3AR' },
-                { id: 'san', label: 'SAN (Nf3)' },
-              ]
+            <select id="select-board-theme" class="pill-select" title="Tema do Tabuleiro">
+              ${Object.keys(BOARD_THEMES)
                 .map(
-                  (n) => `
-                  <button
-                    type="button"
-                    data-action="set-notation"
-                    data-notation="${n.id}"
-                    aria-pressed="${state.notationMode === n.id ? 'true' : 'false'}"
-                  >${n.label}</button>
-                `
+                  (k) =>
+                    `<option value="${k}" ${state.boardTheme === k ? 'selected' : ''}>🎨 ${escapeHtml(BOARD_THEMES[k].name)}</option>`
                 )
                 .join('')}
-            </div>
+            </select>
           </div>
-        `
-        : '';
+        </section>
 
-    // Banner de Feedback Construtivo do Treinador Inteligente
-    const feedbackHtml = state.lastFeedback
-      ? `
-        <div class="feedback-banner ${state.lastFeedback.tier}">
-          <div style="font-size:13px; font-weight:600;">${state.lastFeedback.headlinePt}</div>
-          <p style="font-size:12.5px; margin-top:3px; line-height:1.45;">${state.lastFeedback.detailPt}</p>
-        </div>
-      `
-      : '';
-
-    // Card de Dicas Progressivas em 3 Níveis
-    const hintsHtml =
-      state.hintLevel > 0
-        ? `
-          <div class="panel" style="background:var(--pill-warning-bg); border-color:#f3d78b; color:var(--pill-warning-ink);">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-              <span style="font-size:12px; font-weight:600;">Dica progressiva · Nível ${state.hintLevel} de 3</span>
+        <div class="studio-grid">
+          <!-- COLUNA ESQUERDA: TABULEIRO INTERATIVO ESTILO CHESS.COM -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="stitch-card" style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:38px;height:38px;border-radius:999px;background:${turnColor === 'w' ? 'var(--amber-soft)' : '#233144'};color:${turnColor === 'w' ? '#855300' : '#fff'};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800">
+                  ${turnColor === 'w' ? '⚪' : '⚫'}
+                </div>
+                <div>
+                  <div style="font-size:15px;font-weight:800">
+                    ${
+                      state.customFen
+                        ? `Explorando Variante no Tabuleiro (${turnColor === 'w' ? 'Brancas' : 'Pretas'})`
+                        : `Vez de jogar: ${turnColor === 'w' ? 'Brancas ⚪' : 'Pretas ⚫'}`
+                    }
+                  </div>
+                  <div style="font-size:12px;color:var(--on-surface-variant)">
+                    Arraste ou clique nas peças como no Chess.com, ou clique nos lances dentro do parágrafo!
+                  </div>
+                </div>
+              </div>
               ${
-                state.hintLevel < 3
-                  ? `<button type="button" data-action="cycle-hint" class="card-link" style="font-size:12px; color:var(--pill-warning-ink);">Revelar nível ${state.hintLevel + 1}</button>`
+                currentStep && !state.customFen
+                  ? `<span style="padding:5px 12px;border-radius:12px;background:var(--mint-soft);color:var(--primary);font-size:15px;font-weight:800">${currentStep.moveNumber}${currentStep.color === 'w' ? '. ' : '... '}${escapeHtml(formatMoveByMode(currentStep, state.notationMode))}</span>`
                   : ''
               }
             </div>
-            <div style="display:flex; flex-direction:column; gap:5px; font-size:13px; line-height:1.45;">
-              <div><strong>1. Pergunta:</strong> ${hints.level1Question}</div>
-              ${state.hintLevel >= 2 ? `<div><strong>2. Peça e casa:</strong> ${hints.level2PieceAndPlan}</div>` : ''}
-              ${state.hintLevel >= 3 ? `<div><strong>3. Solução explicada:</strong> ${hints.level3MoveAndWhy}</div>` : ''}
+
+            <div class="board-stage-row">
+              <div class="eval-bar" title="Avaliação Stockfish Local: ${evalLabel}">
+                <div class="eval-fill-dark" style="height:${100 - whitePct}%"></div>
+                <div class="eval-fill-light" style="height:${whitePct}%"></div>
+                <span class="eval-score-label" style="${engineEval.scoreCp >= 0 ? 'bottom:6px;color:var(--primary)' : 'top:6px;color:#fff'}">${evalLabel}</span>
+              </div>
+
+              <div class="board-frame" id="chessboard-frame">
+                <div class="board-grid" id="chessboard-grid">
+                  ${squaresHtml}
+                  ${arrowsSvgHtml}
+                  ${promoHtml}
+                </div>
+              </div>
             </div>
+
+            <div class="stitch-card" style="padding:15px 18px">
+              <button type="button" class="hint-gold-btn" id="btn-ask-owl-hint">
+                <span>💡</span>
+                <span>Pedir Dica Mágica à Coruja Sofia (${state.hintLevel === 0 ? '1 de 3' : `Nível ${state.hintLevel} de 3`})</span>
+              </button>
+
+              <div class="transport-grid">
+                <button type="button" class="tactile-btn" id="btn-ply-first" ${state.currentPly === 0 && !state.customFen ? 'disabled' : ''}>⏮ Início</button>
+                <button type="button" class="tactile-btn" id="btn-ply-prev" ${state.currentPly === 0 && !state.customFen ? 'disabled' : ''}>◀ Voltar</button>
+                <button type="button" class="tactile-btn primary" id="btn-ply-next" ${state.currentPly >= steps.length ? 'disabled' : ''}>Avançar ▶</button>
+                <button type="button" class="tactile-btn" id="btn-flip-board">🔄 Girar</button>
+                <button type="button" class="tactile-btn" id="btn-speak-voice" style="background:var(--sky-soft);color:var(--sky-ink);border-color:var(--sky-border)">🔊 Ouvir Voz</button>
+              </div>
+
+              <div style="margin-top:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:5px">
+                  <span style="color:var(--primary)">Progresso na Lição: ${progressPct}% (${state.currentPly}/${steps.length} lances)</span>
+                  <button type="button" id="btn-mark-complete" style="border:none;background:var(--amber-soft);color:var(--amber-ink);padding:2px 10px;border-radius:999px;font-size:11px;font-weight:800;cursor:pointer">
+                    ${state.completedGameIds.includes(activeGame.id) ? '✓ Concluído (+3 ⭐)' : 'Concluir & Coletar 3 ⭐'}
+                  </button>
+                </div>
+                <div class="candy-track">
+                  <div class="candy-fill" style="width:${Math.max(4, progressPct)}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COLUNA DIREITA: LEITOR INTERATIVO DE PARÁGRAFOS / MENTORES / PLANILHA -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#fff;padding:6px;border-radius:16px;border:1px solid var(--border-warm)">
+              <button type="button" class="stitch-nav-btn ${state.rightTab === 'book_reader' ? 'active' : ''}" data-right-tab="book_reader" style="justify-content:center">
+                <span>📖</span><span>Livro Interativo</span>
+              </button>
+              <button type="button" class="stitch-nav-btn ${state.rightTab === 'mentors' ? 'active' : ''}" data-right-tab="mentors" style="justify-content:center">
+                <span>🦉</span><span>3 Mentores</span>
+              </button>
+              <button type="button" class="stitch-nav-btn ${state.rightTab === 'movesheet' ? 'active' : ''}" data-right-tab="movesheet" style="justify-content:center">
+                <span>📋</span><span>Planilha (${steps.length})</span>
+              </button>
+            </div>
+
+            ${
+              state.lastFeedback
+                ? `<div style="padding:12px 15px;border-radius:16px;border:2px solid ${state.lastFeedback.accepted ? '#16865E' : '#F87171'};background:${state.lastFeedback.accepted ? 'var(--mint-soft)' : 'var(--coral-soft)'};color:${state.lastFeedback.accepted ? '#005237' : '#93000a'}">
+                    <div style="font-weight:800;font-size:14px">${escapeHtml(state.lastFeedback.headlinePt)}</div>
+                    <div style="font-size:12.5px;margin-top:3px">${escapeHtml(state.lastFeedback.detailPt)}</div>
+                  </div>`
+                : ''
+            }
+
+            ${rightColumnContentHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // TELA 2: BIBLIOTECA MÁGICA (OS 4 LIVROS COMPLETOS + TODOS OS CAPÍTULOS)
+    // ========================================================================
+    else if (state.navDest === 'library') {
+      const booksSectionsHtml = PREINSTALLED_BOOKS.map((book, bIdx) => {
+        const chaptersHtml = (book.chapters || [])
+          .filter((ch) => {
+            if (!state.searchQuery.trim()) return true;
+            const q = state.searchQuery.toLowerCase();
+            return (
+              book.titlePt.toLowerCase().includes(q) ||
+              book.author.toLowerCase().includes(q) ||
+              ch.titlePt.toLowerCase().includes(q) ||
+              ch.subtitlePt.toLowerCase().includes(q)
+            );
+          })
+          .map(
+            (ch) => `
+            <div style="background:var(--canvas-cream);border:1px solid var(--border-warm);border-radius:18px;padding:15px;display:flex;flex-direction:column;justify-content:space-between;gap:10px">
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <span style="background:var(--primary-container);color:#fff;font-size:11px;font-weight:800;padding:2px 9px;border-radius:8px">Capítulo ${ch.number}</span>
+                  <span style="font-size:11px;font-weight:700;color:var(--muted)">${(ch.games || []).length} Lição(ões)</span>
+                </div>
+                <h3 style="font-size:16px;font-weight:800">${escapeHtml(ch.titlePt)}</h3>
+                <p style="font-size:12.5px;color:var(--on-surface-variant);margin-top:3px">${escapeHtml(ch.subtitlePt)}</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px solid var(--border-warm)">
+                ${(ch.games || [])
+                  .map(
+                    (gm) => `
+                  <div style="background:#fff;border:1px solid var(--border-warm);border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <div style="min-width:0">
+                      <div style="font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        ${state.completedGameIds.includes(gm.id) ? '⭐ ' : '♟️ '}${escapeHtml(gm.titlePt)}
+                      </div>
+                      <div style="font-size:11.5px;color:var(--muted)">${escapeHtml(gm.white)} vs. ${escapeHtml(gm.black)} (${escapeHtml(gm.year)}) • ${(gm.movesSan || []).length} lances</div>
+                    </div>
+                    <button type="button" class="tactile-btn primary" data-open-book="${book.id}" data-open-game="${gm.id}" style="height:34px;font-size:12px;flex-shrink:0">
+                      📖 Ler & Clicar
+                    </button>
+                  </div>
+                `
+                  )
+                  .join('')}
+              </div>
+            </div>
+          `
+          )
+          .join('');
+
+        if (!chaptersHtml) return '';
+
+        return `
+          <section class="stitch-card" style="margin-bottom:20px">
+            <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-warm)">
+              <span style="font-size:11px;font-weight:800;text-transform:uppercase;background:var(--mint-soft);color:var(--primary);padding:3px 10px;border-radius:999px">
+                Livro ${bIdx + 1} • ${escapeHtml(book.author)} (${escapeHtml(book.publicationYear)}) • ${(book.chapters || []).length} Capítulos Completos
+              </span>
+              <h2 style="font-size:22px;font-weight:800;margin-top:6px">${escapeHtml(book.titlePt)}</h2>
+              <p style="font-size:13.5px;color:var(--on-surface-variant);margin-top:3px">${escapeHtml(book.descriptionPt)}</p>
+            </div>
+            <div class="cards-grid-2">${chaptersHtml}</div>
+          </section>
+        `;
+      }).join('');
+
+      mainBodyHtml = `
+        <div class="stitch-card" style="margin-bottom:20px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px">
+            <div>
+              <span style="font-size:11px;font-weight:800;text-transform:uppercase;background:var(--mint-soft);color:var(--primary);padding:3px 10px;border-radius:999px">✨ Biblioteca Mágica Completa</span>
+              <h1 style="font-size:28px;font-weight:800;margin-top:6px">Os 4 Livros Clássicos Completos com Lances Clicáveis</h1>
+              <p style="font-size:14px;color:var(--on-surface-variant)">Escolha qualquer capítulo abaixo para ler o texto completo e clicar nos movimentos dentro dos parágrafos.</p>
+            </div>
+            <input type="text" id="input-library-search" value="${escapeHtml(state.searchQuery)}" placeholder="🔍 Filtrar capítulos, mestres ou temas..." style="height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--border-warm);background:var(--canvas-cream);min-width:290px;font-size:13.5px" />
+          </div>
+        </div>
+        ${booksSectionsHtml}
+      `;
+    }
+
+    // ========================================================================
+    // TELA 3: ABERTURAS, MEIO-JOGO, FINAIS & GOOGLE NOTEBOOKLM
+    // ========================================================================
+    else if (state.navDest === 'openings') {
+      const openingsCardsHtml = CHESS_OPENINGS.map(
+        (op) => `
+        <div class="stitch-card" style="display:flex;flex-direction:column;justify-content:space-between;gap:12px">
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:11px;font-weight:800;background:var(--mint-soft);color:var(--primary);padding:2px 9px;border-radius:8px">ECO ${escapeHtml(op.eco)} • ${escapeHtml(op.categoryLabelPt)}</span>
+              <span style="font-size:11px;font-weight:800;background:var(--amber-soft);color:var(--amber-ink);padding:2px 9px;border-radius:999px">${op.recommendedFor === 'black' ? '⚫ Pretas' : '⚪ Brancas'}</span>
+            </div>
+            <h3 style="font-size:17px;font-weight:800">${escapeHtml(op.namePt)}</h3>
+            <p style="font-size:13px;color:var(--on-surface-variant);margin-top:4px">${escapeHtml(op.summaryPt)}</p>
+          </div>
+          <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border-warm)">
+            <button type="button" class="tactile-btn primary" data-open-opening="${op.id}" style="flex:1;height:36px">📖 Estudar & Clicar</button>
+            <button type="button" class="tactile-btn" data-challenge-opening="${op.id}" style="height:36px;background:var(--amber-soft);color:var(--amber-ink)">🎯 Desafiar</button>
+          </div>
+        </div>
+      `
+      ).join('');
+
+      const customCardsHtml = state.customStudies
+        .map(
+          (st) => `
+          <div class="stitch-card" style="border:2px solid var(--sky-border);display:flex;flex-direction:column;justify-content:space-between;gap:12px">
+            <div>
+              <span style="font-size:11px;font-weight:800;background:var(--sky-soft);color:var(--sky-ink);padding:2px 9px;border-radius:999px">📓 Google NotebookLM • ${escapeHtml(st.openingNamePt)}</span>
+              <h3 style="font-size:17px;font-weight:800;margin-top:6px">${escapeHtml(st.titlePt)}</h3>
+              <p style="font-size:13px;color:var(--on-surface-variant);margin-top:4px">${escapeHtml(st.introPt)}</p>
+            </div>
+            <button type="button" class="tactile-btn primary" data-open-custom="${st.id}" style="width:100%;height:36px">📖 Abrir Estudo Interativo</button>
           </div>
         `
-        : '';
-
-    // Aba 1: Orientação e as 3 Fontes Separadas (Do Tutor, Do Livro, Do Stockfish)
-    if (state.rightTab === 'guidance') {
-      const tutorComment = currentStep
-        ? (currentStep.annotation && currentStep.annotation.commentPt) ||
-          `O lance ${sanToPortugueseAlgebraic(currentStep.san)} desenvolve a peça da casa ${currentStep.from} para ${currentStep.to}, mantendo a coordenação entre as alas.`
-        : state.studyType === 'opening'
-        ? opening.summaryPt
-        : game.introPt;
-
-      const bookOriginalText =
-        currentStep && currentStep.annotation && currentStep.annotation.commentOriginal
-          ? currentStep.annotation.commentOriginal
-          : state.studyType === 'opening'
-          ? `Linha clássica (${opening.eco}): ${(opening.whitePlansPt && opening.whitePlansPt[0]) || opening.summaryPt}`
-          : game.introOriginal ||
-            (game.keyTakeawaysPt && game.keyTakeawaysPt[0]) ||
-            'Princípio estratégico catalogado e validado na edição clássica.';
-
-      const scoreCpText = `${engineEval.scoreCp >= 0 ? '+' : ''}${(engineEval.scoreCp / 100).toFixed(2)}`;
-      const bestMovePt = sanToPortugueseAlgebraic(engineEval.bestMoveSan || '');
-      const pvLineFormatted = (engineEval.pvLineSan || [])
-        .map((m) => sanToPortugueseAlgebraic(m))
-        .join(' → ');
-
-      return `
-        <div class="guidance-column">
-          <div class="tabs" role="tablist">
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="guidance" aria-selected="true">Orientação e fontes</button>
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="movesheet" aria-selected="false">Planilha de lances (${steps.length})</button>
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="plan" aria-selected="false">Plano estratégico</button>
-          </div>
-
-          ${notationSelectorHtml}
-          ${feedbackHtml}
-          ${hintsHtml}
-
-          <!-- FONTE 1: DO TUTOR -->
-          <section class="source-card tutor">
-            <div class="source-header">
-              <span class="source-title">${ICONS.tutor} Do Tutor · Explicação guiada</span>
-              <span class="pill warn">Pedagogia</span>
-            </div>
-            <p class="source-body">${tutorComment}</p>
-            ${
-              nextExpectedStep
-                ? `<div style="margin-top:8px; font-size:12px; color:var(--muted);">
-                    Próxima tarefa: encontre o lance das <strong>${nextExpectedStep.color === 'w' ? 'Brancas' : 'Pretas'}</strong> no tabuleiro ou clique em "Ver dica".
-                  </div>`
-                : ''
-            }
-          </section>
-
-          <!-- FONTE 2: DO LIVRO (COM CITAÇÃO VERIFICADA + PIPELINE OCR) -->
-          <section class="source-card book">
-            <div class="source-header">
-              <span class="source-title">${ICONS.book} Do Livro · Fonte histórica verificada</span>
-              <span class="pill pos">Citação validada</span>
-            </div>
-            <p class="source-body">${bookOriginalText}</p>
-            ${
-              currentStep
-                ? `<div style="margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted);">
-                    <span>Algébrica PT: <strong class="mono">${sanToPortugueseAlgebraic(currentStep.san)}</strong></span>
-                    <span>·</span>
-                    <span>Descritiva PT: <strong class="mono">${currentStep.descriptivePt}</strong></span>
-                    <span>·</span>
-                    <span>Descritiva ES: <strong class="mono">${currentStep.descriptiveEs}</strong></span>
-                  </div>`
-                : ''
-            }
-            <div class="source-citation">
-              <span>${citation.bookTitle} · ${citation.author} · ${citation.chapterLabel} (${citation.pageEstimate})</span>
-              <button type="button" data-action="open-ocr-modal" class="card-link" style="font-size:12px;">Fontes e OCR</button>
-            </div>
-          </section>
-
-          <!-- FONTE 3: DO STOCKFISH (CLARAMENTE SEPARADO DO AUTOR) -->
-          <section class="source-card engine">
-            <div class="source-header">
-              <span class="source-title">${ICONS.cpu} Do Stockfish · Análise independente do computador</span>
-              <span class="pill info mono">${scoreCpText}</span>
-            </div>
-            <p class="source-body">
-              Melhor lance calculado: <strong class="mono">${bestMovePt || '—'}</strong>. ${engineEval.explanationPt}
-            </p>
-            ${
-              pvLineFormatted
-                ? `<div style="margin-top:6px; font-size:12px; color:var(--muted);">
-                    Linha calculada (profundidade ${engineEval.depth}): <span class="mono">${pvLineFormatted}</span>
-                  </div>`
-                : ''
-            }
-            <div style="margin-top:6px; font-size:11.5px; color:var(--faint);">
-              Nota: avaliação gerada pelo motor tático local, separada dos comentários originais do autor do livro.
-            </div>
-          </section>
-        </div>
-      `;
-    }
-
-    // Aba 2: Planilha de Lances Sincronizada (Tabela limpa sem zebra conforme app.css)
-    if (state.rightTab === 'movesheet') {
-      const pairs = [];
-      for (let i = 0; i < steps.length; i += 2) {
-        pairs.push({
-          moveNumber: Math.floor(i / 2) + 1,
-          white: steps[i],
-          black: steps[i + 1] || null,
-        });
-      }
-
-      const rowsHtml = pairs
-        .map((pair) => {
-          const wActive = state.currentPly === pair.white.ply;
-          const bActive = pair.black && state.currentPly === pair.black.ply;
-          const wText = formatMoveByMode(pair.white, state.notationMode);
-          const bText = pair.black ? formatMoveByMode(pair.black, state.notationMode) : '—';
-          return `
-            <tr>
-              <td class="mono" style="width:44px; color:var(--muted);">${pair.moveNumber}.</td>
-              <td>
-                <button
-                  type="button"
-                  data-action="goto-ply"
-                  data-ply="${pair.white.ply}"
-                  class="move-cell"
-                  style="
-                    padding: 3px 8px;
-                    border-radius: 4px;
-                    border: 0;
-                    cursor: pointer;
-                    background: ${wActive ? 'var(--active)' : 'transparent'};
-                    font-weight: ${wActive ? '600' : '400'};
-                    color: var(--text);
-                  "
-                >${wText} ${pair.white.annotation && pair.white.annotation.badge ? pair.white.annotation.badge : ''}</button>
-              </td>
-              <td>
-                ${
-                  pair.black
-                    ? `<button
-                        type="button"
-                        data-action="goto-ply"
-                        data-ply="${pair.black.ply}"
-                        class="move-cell"
-                        style="
-                          padding: 3px 8px;
-                          border-radius: 4px;
-                          border: 0;
-                          cursor: pointer;
-                          background: ${bActive ? 'var(--active)' : 'transparent'};
-                          font-weight: ${bActive ? '600' : '400'};
-                          color: var(--text);
-                        "
-                      >${bText} ${pair.black.annotation && pair.black.annotation.badge ? pair.black.annotation.badge : ''}</button>`
-                    : `<span style="color:var(--faint);">—</span>`
-                }
-              </td>
-              <td class="mono" style="font-size:11.5px; color:var(--muted);">
-                ${pair.white.descriptivePt}${pair.black ? ` / ${pair.black.descriptivePt}` : ''}
-              </td>
-            </tr>
-          `;
-        })
+        )
         .join('');
 
-      return `
-        <div class="guidance-column">
-          <div class="tabs" role="tablist">
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="guidance" aria-selected="false">Orientação e fontes</button>
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="movesheet" aria-selected="true">Planilha de lances (${steps.length})</button>
-            <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="plan" aria-selected="false">Plano estratégico</button>
+      mainBodyHtml = `
+        <div class="stitch-card" style="margin-bottom:20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px">
+          <div>
+            <span style="font-size:11px;font-weight:800;text-transform:uppercase;background:var(--amber-soft);color:var(--amber-ink);padding:3px 10px;border-radius:999px">🧭 Aberturas, Meio-Jogo, Finais & Google NotebookLM</span>
+            <h1 style="font-size:26px;font-weight:800;margin-top:6px">Laboratório Completo de Estudos</h1>
+            <p style="font-size:14px;color:var(--on-surface-variant)">Estude as 18 aberturas clássicas ou importe seus cadernos de Abertura, Meio-Jogo e Final do Google NotebookLM.</p>
           </div>
-
-          ${notationSelectorHtml}
-
-          <div class="panel" style="padding:12px;">
-            <div class="panel-header">
-              <h2>Registro oficial de lances</h2>
-              <span class="panel-meta">Clique em qualquer lance para ir à posição</span>
-            </div>
-            <div class="table-wrap">
-              <table class="clean-table">
-                <thead>
-                  <tr>
-                    <th>Nº</th>
-                    <th>Brancas</th>
-                    <th>Pretas</th>
-                    <th>Equivalente Descritivo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHtml}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // Aba 3: Plano Estratégico (Planos de Brancas, Pretas, Estrutura de Peões e Armadilhas)
-    const whitePlans =
-      state.studyType === 'opening'
-        ? opening.whitePlansPt || []
-        : game.keyTakeawaysPt || [];
-    const blackPlans =
-      state.studyType === 'opening'
-        ? opening.blackPlansPt || []
-        : [
-            'Neutralizar a iniciativa adversária mantendo a estrutura de peões compacta.',
-            'Conectar as Torres e disputar as colunas abertas no meio-jogo.',
-          ];
-    const pawnStructureText =
-      state.studyType === 'opening'
-        ? opening.pawnStructurePt
-        : `Partida modelo de ${book.titlePt} (${chapter.titlePt}). Observe como cada lance prepara a ruptura central.`;
-
-    return `
-      <div class="guidance-column">
-        <div class="tabs" role="tablist">
-          <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="guidance" aria-selected="false">Orientação e fontes</button>
-          <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="movesheet" aria-selected="false">Planilha de lances (${steps.length})</button>
-          <button type="button" class="tab-btn" data-action="set-right-tab" data-tab="plan" aria-selected="true">Plano estratégico</button>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Estrutura de peões e casas-chave</h2>
-            <span class="pill neutral">${state.studyType === 'opening' ? opening.eco : game.eco || 'Clássico'}</span>
-          </div>
-          <p style="font-size:13.5px; line-height:1.5; color:var(--text);">${pawnStructureText}</p>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Plano estratégico das Brancas</h2>
-          </div>
-          <div class="rows">
-            ${whitePlans
-              .map(
-                (p) => `
-                <div class="row" style="min-height:36px; font-size:13px;">
-                  <span>${p}</span>
-                </div>
-              `
-              )
-              .join('')}
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Plano estratégico e contrajogo das Pretas</h2>
-          </div>
-          <div class="rows">
-            ${blackPlans
-              .map(
-                (p) => `
-                <div class="row" style="min-height:36px; font-size:13px;">
-                  <span>${p}</span>
-                </div>
-              `
-              )
-              .join('')}
-          </div>
+          <button type="button" class="tactile-btn primary" id="btn-open-notebook-modal-2" style="padding:0 18px;height:42px">
+            📓 + Importar do Google NotebookLM / Internet
+          </button>
         </div>
 
         ${
-          state.studyType === 'opening' && opening.tacticalTrapsPt && opening.tacticalTrapsPt.length
-            ? `
-              <div class="panel" style="border-left:3px solid var(--warning);">
-                <div class="panel-header">
-                  <h2>Armadilhas táticas típicas</h2>
-                  <span class="pill warn">Atenção</span>
-                </div>
-                <div class="rows">
-                  ${opening.tacticalTrapsPt
-                    .map(
-                      (t) => `
-                      <div class="row" style="min-height:36px; font-size:13px;">
-                        <span>${t}</span>
-                      </div>
-                    `
-                    )
-                    .join('')}
-                </div>
-              </div>
-            `
+          state.customStudies.length > 0
+            ? `<h2 style="font-size:19px;font-weight:800;margin-bottom:12px">📓 Meus Estudos Importados do Google NotebookLM (${state.customStudies.length})</h2>
+               <div class="cards-grid-3" style="margin-bottom:24px">${customCardsHtml}</div>`
             : ''
         }
-      </div>
-    `;
-  }
 
-  // ==========================================================================
-  // 10. VISÃO DE TRILHA & PROGRESSO (KPI STRIP DIVIDIDA + FILA DE REVISÃO)
-  // ==========================================================================
-  function renderOverviewSheet() {
-    const totalGames = PREINSTALLED_BOOKS.reduce(
-      (acc, b) => acc + b.chapters.reduce((cAcc, c) => cAcc + c.games.length, 0),
-      0
-    );
-    const completedCount = state.completedGameIds.length;
-    const reviewCount = state.reviewQueue.length;
-
-    const reviewRowsHtml =
-      state.reviewQueue.length > 0
-        ? state.reviewQueue
-            .slice(0, 6)
-            .map(
-              (item) => `
-              <tr>
-                <td style="font-weight:500;">${item.titlePt}</td>
-                <td class="mono">Lance ${Math.floor(item.ply / 2) + 1} (${item.expectedSanPt})</td>
-                <td style="color:var(--muted);">${item.reasonPt}</td>
-                <td class="n">
-                  <button
-                    type="button"
-                    data-action="practice-review-item"
-                    data-review-id="${item.id}"
-                    class="btn primary"
-                    style="height:26px; font-size:12px; padding:0 10px;"
-                  >Praticar posição</button>
-                </td>
-              </tr>
-            `
-            )
-            .join('')
-        : `
-          <tr>
-            <td colspan="4">
-              <div class="empty-box">
-                Nenhuma posição pendente na fila de revisão. Quando você pedir uma dica ou errar um lance no Treinador, a posição aparecerá aqui automaticamente.
-              </div>
-            </td>
-          </tr>
-        `;
-
-    const booksSummaryRows = PREINSTALLED_BOOKS.map((b) => {
-      const games = b.chapters.flatMap((c) => c.games);
-      const done = games.filter((g) => state.completedGameIds.includes(g.id)).length;
-      return `
-        <tr>
-          <td style="font-weight:500;">${b.titlePt}</td>
-          <td style="color:var(--muted);">${b.author}</td>
-          <td class="n">${b.chapters.length}</td>
-          <td class="n">${done} de ${games.length}</td>
-          <td class="n">
-            <button
-              type="button"
-              data-action="select-game"
-              data-book-id="${b.id}"
-              data-game-id="${games[0].id}"
-              class="card-link"
-            >Abrir livro</button>
-          </td>
-        </tr>
+        <h2 style="font-size:19px;font-weight:800;margin-bottom:12px">🌱 Repertório de ${CHESS_OPENINGS.length} Aberturas & Defesas Clássicas</h2>
+        <div class="cards-grid-3">${openingsCardsHtml}</div>
       `;
-    }).join('');
+    }
 
-    return `
-      <div style="display:flex; flex-direction:column; gap:16px; overflow-y:auto; padding-right:2px;">
-        <!-- Faixa de KPIs dividida por 1px (sem ícones, padrão estrito taste-skill) -->
-        <div class="kpis">
-          <div class="kpi">
-            <div class="kpi-label">Estudos clássicos concluídos</div>
-            <div class="kpi-value">${completedCount} <small>de ${totalGames} partidas</small></div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Repertório de aberturas</div>
-            <div class="kpi-value">${CHESS_OPENINGS.length} <small>linhas ECO validadas</small></div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Fila de revisão inteligente</div>
-            <div class="kpi-value">${reviewCount} <small>${reviewCount === 1 ? 'posição para revisar' : 'posições para revisar'}</small></div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Meio-lances verificados (chess.js)</div>
-            <div class="kpi-value">647 <small>100% legais</small></div>
-          </div>
+    // ========================================================================
+    // TELA 4: GALERIA DE CONQUISTAS & ESTRELAS
+    // ========================================================================
+    else {
+      mainBodyHtml = `
+        <div class="stitch-card" style="margin-bottom:20px">
+          <span style="font-size:11px;font-weight:800;text-transform:uppercase;background:var(--amber-soft);color:var(--amber-ink);padding:3px 10px;border-radius:999px">✨ Seu Livro dos Campeões</span>
+          <h1 style="font-size:28px;font-weight:800;margin-top:6px">🏆 Galeria de Conquistas & Sala dos Troféus</h1>
+          <p style="font-size:14.5px;color:var(--on-surface-variant);margin-top:4px">Acompanhe suas Estrelas Mágicas, capítulos dominados e posições na Fila Inteligente de Revisão.</p>
         </div>
 
-        <!-- Fila de Revisão Inteligente -->
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Fila de revisão inteligente</h2>
-            <span class="panel-meta">Posições em que você pediu dica ou tentou um lance alternativo</span>
+        <div class="kpi-grid-4" style="margin-bottom:22px">
+          <div class="stitch-card">
+            <div style="font-size:13px;font-weight:700;color:var(--on-surface-variant)">Estrelas Mágicas</div>
+            <div style="font-size:30px;font-weight:800;margin-top:4px">${totalMagicStars} ⭐</div>
+            <div style="font-size:12px;font-weight:700;color:#855300;margin-top:6px">+3 estrelas por capítulo concluído</div>
           </div>
-          <div class="table-wrap">
-            <table class="clean-table">
-              <thead>
-                <tr>
-                  <th>Estudo ou abertura</th>
-                  <th>Posição alvo</th>
-                  <th>Motivo do registro</th>
-                  <th class="n">Ação</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${reviewRowsHtml}
-              </tbody>
-            </table>
+          <div class="stitch-card">
+            <div style="font-size:13px;font-weight:700;color:var(--on-surface-variant)">Lições e Capítulos no Acervo</div>
+            <div style="font-size:30px;font-weight:800;margin-top:4px">${allEntries.length + state.customStudies.length} 📚</div>
+            <div style="font-size:12px;font-weight:700;color:var(--primary);margin-top:6px">${state.completedGameIds.length} concluídos</div>
           </div>
-        </div>
-
-        <!-- Progresso por Livro Clássico -->
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Acervo de livros clássicos pré-instalados</h2>
-            <button type="button" data-action="open-ocr-modal" class="card-link" style="font-size:12px;">Ver pipeline de fontes e OCR</button>
+          <div class="stitch-card">
+            <div style="font-size:13px;font-weight:700;color:var(--on-surface-variant)">Aberturas & Defesas</div>
+            <div style="font-size:30px;font-weight:800;margin-top:4px">${CHESS_OPENINGS.length} 🧭</div>
+            <div style="font-size:12px;font-weight:700;color:var(--sky-ink);margin-top:6px">Abertas, Semi-Abertas, Fechadas e Índias</div>
           </div>
-          <div class="table-wrap">
-            <table class="clean-table">
-              <thead>
-                <tr>
-                  <th>Obra clássica</th>
-                  <th>Autor</th>
-                  <th class="n">Capítulos</th>
-                  <th class="n">Estudos concluídos</th>
-                  <th class="n">Acesso</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${booksSummaryRows}
-              </tbody>
-            </table>
+          <div class="stitch-card">
+            <div style="font-size:13px;font-weight:700;color:var(--on-surface-variant)">Cadernos NotebookLM</div>
+            <div style="font-size:30px;font-weight:800;margin-top:4px">${state.customStudies.length} 📓</div>
+            <div style="font-size:12px;font-weight:700;color:var(--on-surface-variant);margin-top:6px">Prontos para leitura interativa</div>
           </div>
         </div>
-      </div>
-    `;
-  }
+      `;
+    }
 
-  // ==========================================================================
-  // 11. MODAL DE FONTES, CITAÇÕES E PIPELINE OCR
-  // ==========================================================================
-  function renderOcrModal() {
-    if (!state.showOcrModal) return '';
-    return `
-      <div class="modal-backdrop" data-action="close-ocr-modal">
-        <div class="modal-dialog" onclick="event.stopPropagation()">
-          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+    // Modal do Google NotebookLM
+    const notebookModalHtml = state.isNotebookModalOpen
+      ? `
+      <div class="stitch-modal-backdrop" id="modal-notebook-backdrop">
+        <div class="stitch-modal-panel">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
             <div>
-              <h2 style="font-size:18px; font-weight:600;">Fontes históricas e pipeline de validação OCR</h2>
-              <p style="font-size:13px; color:var(--muted); margin-top:2px;">
-                Transparência editorial entre os livros originais, o Tutor pedagógico e o motor Stockfish.
-              </p>
+              <span style="font-size:11px;font-weight:800;text-transform:uppercase;background:var(--mint-soft);color:var(--primary);padding:3px 10px;border-radius:999px">📓 Integração Google NotebookLM & Internet</span>
+              <h2 style="font-size:21px;font-weight:800;margin-top:5px">Importar Estudo (Aberturas, Meio-Jogo ou Finais)</h2>
+              <p style="font-size:13px;color:var(--on-surface-variant)">Cole resumos do Google NotebookLM, textos da internet ou PGNs. Todos os movimentos citados nos parágrafos viram botões clicáveis!</p>
             </div>
-            <button type="button" data-action="close-ocr-modal" class="btn ghost" style="padding:0 8px;">
-              ${ICONS.close}
-            </button>
+            <button type="button" class="icon-circle-btn" id="btn-close-notebook-modal">✕</button>
           </div>
 
-          <div style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
-            <div class="kpis">
-              <div class="kpi">
-                <div class="kpi-label">Etapa 1 · Extração</div>
-                <div class="kpi-value" style="font-size:15px; font-weight:500;">PDF & OCR Bilíngue</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-label">Etapa 2 · Conversão</div>
-                <div class="kpi-value" style="font-size:15px; font-weight:500;">Descritiva C3BR → SAN</div>
-              </div>
-              <div class="kpi">
-                <div class="kpi-label">Etapa 3 · Auditoria</div>
-                <div class="kpi-value" style="font-size:15px; font-weight:500;">Validador chess.js</div>
-              </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:12px;font-weight:800;display:block;margin-bottom:4px">Título do Estudo:</label>
+              <input type="text" id="nb-input-title" value="${escapeHtml(state.nbTitle)}" style="width:100%;height:38px;padding:0 12px;border-radius:12px;border:1px solid var(--border-warm);background:#fff" />
             </div>
-
-            <div class="table-wrap">
-              <table class="clean-table">
-                <thead>
-                  <tr>
-                    <th>Obra física de origem</th>
-                    <th>Autor</th>
-                    <th>Notação original</th>
-                    <th class="n">Status chess.js</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${PREINSTALLED_BOOKS.map(
-                    (b) => `
-                    <tr>
-                      <td style="font-weight:500;">${b.titlePt}</td>
-                      <td style="color:var(--muted);">${b.author}</td>
-                      <td class="mono" style="font-size:12px;">${
-                        b.originalNotation === 'descriptive_pt'
-                          ? 'Descritiva PT (P4R, C3BR)'
-                          : b.originalNotation === 'descriptive_es'
-                          ? 'Descritiva ES (P4R, C3AR)'
-                          : 'Algébrica Internacional'
-                      }</td>
-                      <td class="n"><span class="pill pos">100% Verificado</span></td>
-                    </tr>
-                  `
-                  ).join('')}
-                </tbody>
-              </table>
+            <div>
+              <label style="font-size:12px;font-weight:800;display:block;margin-bottom:4px">Posição Inicial FEN (Opcional — deixe vazio para início padrão):</label>
+              <input type="text" id="nb-input-fen" value="${escapeHtml(state.nbFen)}" placeholder="Ex: 8/8/4k3/8/4P3/4K3/8/8 w - - 0 1" style="width:100%;height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--border-warm);background:#fff;font-family:var(--font-mono);font-size:12.5px" />
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:800;display:block;margin-bottom:4px">Texto do Google NotebookLM / Artigo / PGN:</label>
+              <textarea id="nb-input-text" rows="7" style="width:100%;padding:12px;border-radius:14px;border:1px solid var(--border-warm);background:#fff;font-size:13.5px;line-height:1.6">${escapeHtml(state.nbText)}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px">
+              <button type="button" class="tactile-btn" id="btn-cancel-notebook-modal" style="padding:0 16px">Cancelar</button>
+              <button type="button" class="tactile-btn primary" id="btn-save-notebook-study" style="padding:0 18px">✨ Criar Estudo Interativo & Abrir no Tabuleiro</button>
             </div>
           </div>
         </div>
       </div>
+    `
+      : '';
+
+    root.innerHTML = `
+      <div class="app-shell">
+        ${headerHtml}
+        <main class="stitch-main">
+          ${mainBodyHtml}
+        </main>
+        ${notebookModalHtml}
+      </div>
     `;
+
+    // Animação suave estilo Chess.com na peça do último lance
+    if (state.navDest === 'learn') {
+      const lastMove = state.customLastMove
+        ? state.customLastMove
+        : currentStep
+        ? { from: currentStep.from, to: currentStep.to }
+        : null;
+      const moveKey = lastMove ? `${lastMove.from}-${lastMove.to}-${activeFen}` : '';
+      if (lastMove && moveKey !== state.lastAnimatedMoveKey) {
+        state.lastAnimatedMoveKey = moveKey;
+        const pieceEl = root.querySelector(`[data-piece-sq="${lastMove.to}"]`);
+        if (pieceEl) {
+          const st = squareToCoords(lastMove.from, state.flipped);
+          const en = squareToCoords(lastMove.to, state.flipped);
+          const dx = (st.col - en.col) * 100;
+          const dy = (st.row - en.row) * 100;
+          pieceEl.style.transition = 'none';
+          pieceEl.style.transform = `translate(${dx}%, ${dy}%)`;
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              pieceEl.style.transition = 'transform 185ms cubic-bezier(0.22, 1, 0.36, 1)';
+              pieceEl.style.transform = 'translate(0, 0)';
+            });
+          });
+        }
+      }
+    }
+
+    attachDomListeners(steps, activeFen, nextExpectedStep, engineEval, activeGame);
   }
 
   // ==========================================================================
-  // 12. RENDER PRINCIPAL DO SHELL FRAMED-SHEET
+  // 8. LISTENERS DE EVENTOS (CLIQUE NOS PARÁGRAFOS, TABULEIRO CHESS.COM, ETC.)
   // ==========================================================================
-  function render() {
+  function goToPly(targetPly, steps) {
+    const clamped = Math.max(0, Math.min(steps.length, targetPly));
+    state.customFen = null;
+    state.customLastMove = null;
+    state.customVariationLabel = null;
+    state.selectedSquare = null;
+    state.pendingPromotion = null;
+    state.hintLevel = 0;
+    state.lastFeedback = null;
+    state.currentPly = clamped;
+    if (clamped > 0 && steps[clamped - 1]) {
+      const s = steps[clamped - 1];
+      if (s.captured) chessAudio.playCapture();
+      else chessAudio.playMove();
+    }
+    renderApp();
+  }
+
+  function executeMoveOnBoard(fromSq, toSq, promoPiece, steps, activeFen, nextExpectedStep, engineEval) {
+    try {
+      const c = new Chess(activeFen);
+      const mv = c.move({ from: fromSq, to: toSq, promotion: promoPiece || 'q' });
+      if (!mv) return false;
+
+      if (state.trainerActive && nextExpectedStep && !state.customFen) {
+        if (mv.san === nextExpectedStep.san) {
+          chessAudio.playSuccess();
+          state.lastFeedback = {
+            accepted: true,
+            headlinePt: `Excelente! Lance do Mestre: ${sanToPortugueseAlgebraic(mv.san)}`,
+            detailPt:
+              (nextExpectedStep.annotation && nextExpectedStep.annotation.commentPt) ||
+              'Você encontrou o lance exato do capítulo!',
+          };
+          state.currentPly = Math.min(steps.length, state.currentPly + 1);
+          state.selectedSquare = null;
+          renderApp();
+          return true;
+        } else {
+          chessAudio.playError();
+          state.lastFeedback = {
+            accepted: false,
+            headlinePt: `Quase lá! Você tentou ${sanToPortugueseAlgebraic(mv.san)}`,
+            detailPt:
+              'Essa peça tem outra missão estratégica agora. Clique em "Pedir Dica Mágica" ou tente novamente!',
+          };
+          state.selectedSquare = null;
+          renderApp();
+          return false;
+        }
+      }
+
+      if (!state.customFen && nextExpectedStep && mv.san === nextExpectedStep.san) {
+        goToPly(state.currentPly + 1, steps);
+        return true;
+      }
+
+      state.customFen = c.fen();
+      state.customLastMove = { from: mv.from, to: mv.to };
+      state.customVariationLabel = sanToPortugueseAlgebraic(mv.san);
+      state.selectedSquare = null;
+      if (mv.captured) chessAudio.playCapture();
+      else chessAudio.playMove();
+      renderApp();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function attachDomListeners(steps, activeFen, nextExpectedStep, engineEval, activeGame) {
     const root = document.getElementById('root');
     if (!root) return;
 
-    const { book, chapter, game } = getCurrentBookChapterGame();
-    const opening = getCurrentOpening();
-    const { initialFen, steps } = getCurrentSteps();
-    const activeFen = getActiveFen(initialFen, steps);
-    const currentStep = state.currentPly > 0 ? steps[state.currentPly - 1] : null;
-    const nextExpectedStep = steps[state.currentPly] || null;
-    const engineEval = analyzePositionLocal(activeFen);
-    const hints = buildProgressiveHints(nextExpectedStep, opening);
-    const citation = resolveBookCitation({
-      book,
-      chapter,
-      game,
-      opening,
-      studyType: state.studyType,
+    // Navegação das 4 abas do Stitch
+    root.querySelectorAll('[data-nav]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.navDest = btn.getAttribute('data-nav');
+        renderApp();
+      });
     });
 
-    scheduleOpponentAutoMove(steps);
+    // Sub-abas da coluna direita
+    root.querySelectorAll('[data-right-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.rightTab = btn.getAttribute('data-right-tab');
+        renderApp();
+      });
+    });
 
-    const isCompleted =
-      state.studyType === 'book_game' && state.completedGameIds.includes(game.id);
+    // Clique em qualquer lance da linha principal dentro do parágrafo ou planilha
+    root.querySelectorAll('[data-jump-ply]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const ply = parseInt(btn.getAttribute('data-jump-ply'), 10);
+        if (!isNaN(ply)) goToPly(ply, steps);
+      });
+    });
 
-    // Título e "One Finding" da Folha Principal
-    const mainTitle =
-      state.canvasView === 'overview'
-        ? state.navDest === 'learn'
-          ? 'Trilha guiada e fila de revisão'
-          : 'Progresso de estudos e acervo clássico'
-        : state.studyType === 'opening'
-        ? `${opening.namePt}`
-        : `${game.titlePt}`;
+    // Clique em qualquer lance de variante dentro do parágrafo
+    root.querySelectorAll('[data-var-fen]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.customFen = btn.getAttribute('data-var-fen');
+        state.customLastMove = {
+          from: btn.getAttribute('data-var-from'),
+          to: btn.getAttribute('data-var-to'),
+        };
+        state.customVariationLabel = btn.getAttribute('data-var-label');
+        const p = parseInt(btn.getAttribute('data-var-ply'), 10);
+        if (!isNaN(p)) state.currentPly = p;
+        chessAudio.playMove();
+        renderApp();
+      });
+    });
 
-    const mainFinding =
-      state.canvasView === 'overview'
-        ? `${state.completedGameIds.length} estudos concluídos · ${state.reviewQueue.length} posições aguardando revisão prática`
-        : state.studyType === 'opening'
-        ? `<span class="mono" style="color:var(--accent); font-weight:600;">${opening.eco}</span> · ${opening.categoryLabelPt} · Lance ${state.currentPly} de ${steps.length}`
-        : `${book.titlePt} (Cap. ${chapter.number}) · ${game.white} vs. ${game.black}, <span class="mono">${game.year}</span> · Lance ${state.currentPly} de ${steps.length}`;
-
-    root.innerHTML = `
-      <div class="framed-shell">
-        <!-- 1. CANTO SUPERIOR ESQUERDO DA MOLDURA EM L: MARCA DO PRODUTO + ESCOPO -->
-        <div class="shell-brand">
-          <div class="brand-lockup">
-            <div class="brand-mark">${ICONS.knightMark}</div>
-            <span class="brand-name">Chess Mastery</span>
-          </div>
-          <span class="brand-scope">v1.3</span>
-        </div>
-
-        <!-- 2. BARRA SUPERIOR (48PX) NA MOLDURA EM L -->
-        <header class="shell-topbar">
-          <div class="topbar-search-wrap">
-            ${ICONS.search}
-            <input
-              id="global-search-input"
-              type="text"
-              class="topbar-search"
-              placeholder="Filtrar livros, capítulos, mestres ou aberturas (ex.: C50, Siciliana, Capablanca)..."
-              value="${state.searchQuery.replace(/"/g, '&quot;')}"
-            />
-            <span class="search-kbd">/</span>
-          </div>
-
-          <div class="topbar-right">
-            <!-- Alternador de Modo de Uso: Modo Aprender (Padrão) vs Modo Explorador -->
-            <div class="segmented" role="group" aria-label="Modo de uso">
-              <button
-                type="button"
-                data-action="set-experience-mode"
-                data-mode="aprender"
-                aria-pressed="${state.experienceMode === 'aprender' ? 'true' : 'false'}"
-              >Modo Aprender</button>
-              <button
-                type="button"
-                data-action="set-experience-mode"
-                data-mode="explorador"
-                aria-pressed="${state.experienceMode === 'explorador' ? 'true' : 'false'}"
-              >Modo Explorador</button>
-            </div>
-
-            <button
-              type="button"
-              data-action="open-ocr-modal"
-              class="btn"
-              title="Inspecionar fontes históricas e pipeline OCR"
-            >
-              ${ICONS.fileCheck} Fontes e OCR
-            </button>
-
-            <button
-              type="button"
-              data-action="toggle-sound"
-              class="btn"
-              style="padding:0 9px;"
-              title="${state.soundMuted ? 'Ativar áudio' : 'Silenciar áudio'}"
-            >
-              ${state.soundMuted ? ICONS.volumeOff : ICONS.volumeOn}
-            </button>
-          </div>
-        </header>
-
-        <!-- 3. SIDEBAR ESQUERDA (248PX) NA MOLDURA EM L -->
-        <aside class="shell-sidebar">
-          <nav class="sidebar-nav-section" aria-label="Destinos principais">
-            <button
-              type="button"
-              data-action="nav-dest"
-              data-dest="learn"
-              class="nav-item"
-              aria-current="${state.navDest === 'learn' ? 'page' : 'false'}"
-            >
-              <span class="nav-item-left">${ICONS.compass} <span>Aprender e revisar</span></span>
-              ${
-                state.reviewQueue.length > 0
-                  ? `<span class="nav-count urgent">${state.reviewQueue.length} revisão</span>`
-                  : `<span class="nav-count">Trilha</span>`
-              }
-            </button>
-
-            <button
-              type="button"
-              data-action="nav-dest"
-              data-dest="library"
-              class="nav-item"
-              aria-current="${state.navDest === 'library' ? 'page' : 'false'}"
-            >
-              <span class="nav-item-left">${ICONS.book} <span>Biblioteca de livros</span></span>
-              <span class="nav-count">4 livros</span>
-            </button>
-
-            <button
-              type="button"
-              data-action="nav-dest"
-              data-dest="openings"
-              class="nav-item"
-              aria-current="${state.navDest === 'openings' ? 'page' : 'false'}"
-            >
-              <span class="nav-item-left">${ICONS.board} <span>Aberturas e defesas</span></span>
-              <span class="nav-count">18 linhas</span>
-            </button>
-
-            <button
-              type="button"
-              data-action="nav-dest"
-              data-dest="progress"
-              class="nav-item"
-              aria-current="${state.navDest === 'progress' ? 'page' : 'false'}"
-            >
-              <span class="nav-item-left">${ICONS.ledger} <span>Progresso e acervo</span></span>
-              <span class="nav-count">${state.completedGameIds.length}/12</span>
-            </button>
-          </nav>
-
-          <!-- Catálogo Contextual (Todos os 4 Livros em Acordeão / Modo Isolado / 18 Aberturas) -->
-          <div class="sidebar-catalog">
-            ${renderSidebarCatalog()}
-          </div>
-
-          <div class="sidebar-footer">
-            <span>Motor chess.js ativo</span>
-            <span class="mono">647 lances</span>
-          </div>
-        </aside>
-
-        <!-- 4. A FOLHA BRANCA DE TRABALHO (.work-sheet, recuo de 8px, raio 16px, borda 1px, sem sombra) -->
-        <main class="work-sheet">
-          <div class="sheet-title-row">
-            <div class="sheet-title-main">
-              <h1>${mainTitle}</h1>
-              <div class="sheet-finding">${mainFinding}</div>
-            </div>
-
-            <div class="sheet-controls">
-              ${
-                state.canvasView === 'overview'
-                  ? `
-                    <button type="button" data-action="show-board-view" class="btn primary">
-                      Voltar ao tabuleiro ativo
-                    </button>
-                  `
-                  : `
-                    <!-- Controles do Treinador Inteligente de Aberturas & Estudos -->
-                    <div class="segmented" role="group" aria-label="Cor para treinar">
-                      <button
-                        type="button"
-                        data-action="set-trainer-color"
-                        data-color="w"
-                        aria-pressed="${state.trainerColor === 'w' ? 'true' : 'false'}"
-                      >Brancas</button>
-                      <button
-                        type="button"
-                        data-action="set-trainer-color"
-                        data-color="b"
-                        aria-pressed="${state.trainerColor === 'b' ? 'true' : 'false'}"
-                      >Pretas</button>
-                      <button
-                        type="button"
-                        data-action="set-trainer-color"
-                        data-color="both"
-                        aria-pressed="${state.trainerColor === 'both' ? 'true' : 'false'}"
-                      >Ambas</button>
-                    </div>
-
-                    <button
-                      type="button"
-                      data-action="toggle-trainer"
-                      class="btn ${state.trainerActive ? 'primary' : ''}"
-                    >
-                      ${state.trainerActive ? 'Treinador ativo (jogando)' : 'Treinar lances no tabuleiro'}
-                    </button>
-
-                    ${
-                      state.studyType === 'book_game'
-                        ? `<button type="button" data-action="toggle-complete-game" class="btn">
-                            ${ICONS.check} ${isCompleted ? 'Estudo concluído' : 'Marcar concluído'}
-                          </button>`
-                        : ''
-                    }
-                  `
-              }
-            </div>
-          </div>
-
-          ${
-            state.canvasView === 'overview'
-              ? `<div style="flex:1; min-height:0; margin-top:16px; display:flex; flex-direction:column; overflow:hidden;">${renderOverviewSheet()}</div>`
-              : `
-                <div class="sheet-workspace">
-                  ${renderBoardStage(activeFen, steps, currentStep, nextExpectedStep, engineEval)}
-                  ${renderGuidanceColumn({
-                    book,
-                    chapter,
-                    game,
-                    opening,
-                    steps,
-                    currentStep,
-                    nextExpectedStep,
-                    engineEval,
-                    hints,
-                    citation,
-                  })}
-                </div>
-              `
-          }
-        </main>
-      </div>
-      ${renderOcrModal()}
-    `;
-
-    bindEvents();
-  }
-
-  // ==========================================================================
-  // 13. DELEGAÇÃO DE EVENTOS E ATALHOS DE TECLADO
-  // ==========================================================================
-  function bindEvents() {
-    const searchInput = document.getElementById('global-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const cursorPos = e.target.selectionStart;
-        state.searchQuery = e.target.value;
-        render();
-        const nextInput = document.getElementById('global-search-input');
-        if (nextInput) {
-          nextInput.focus();
-          nextInput.setSelectionRange(cursorPos, cursorPos);
-        }
+    const btnReturnMain = document.getElementById('btn-return-mainline');
+    if (btnReturnMain) {
+      btnReturnMain.addEventListener('click', () => {
+        state.customFen = null;
+        state.customLastMove = null;
+        state.customVariationLabel = null;
+        renderApp();
       });
     }
 
-    document.querySelectorAll('[data-action]').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        const action = el.getAttribute('data-action');
+    // Seletor de Notação
+    const selNot = document.getElementById('select-notation-mode');
+    if (selNot) {
+      selNot.addEventListener('change', (e) => {
+        state.notationMode = e.target.value;
+        persistState();
+        renderApp();
+      });
+    }
 
-        if (action === 'nav-dest') {
-          const dest = el.getAttribute('data-dest');
-          state.navDest = dest;
-          if (dest === 'learn' || dest === 'progress') {
-            state.canvasView = 'overview';
-          } else {
-            state.canvasView = 'board';
-            if (dest === 'openings') {
-              state.studyType = 'opening';
-              state.currentPly = 0;
-              state.customFen = null;
-            } else if (dest === 'library') {
-              state.studyType = 'book_game';
-            }
-          }
-          render();
-          return;
-        }
+    // Seletor de Tema do Tabuleiro
+    const selTheme = document.getElementById('select-board-theme');
+    if (selTheme) {
+      selTheme.addEventListener('change', (e) => {
+        state.boardTheme = e.target.value;
+        renderApp();
+      });
+    }
 
-        if (action === 'show-board-view') {
-          state.canvasView = 'board';
-          render();
-          return;
-        }
-
-        if (action === 'set-experience-mode') {
-          state.experienceMode = el.getAttribute('data-mode');
-          render();
-          return;
-        }
-
-        if (action === 'toggle-book') {
-          const bookId = el.getAttribute('data-book-id');
-          state.selectedBookId = bookId;
-          if (state.expandedBookIds.includes(bookId)) {
-            state.expandedBookIds = state.expandedBookIds.filter((id) => id !== bookId);
-          } else {
-            state.expandedBookIds.push(bookId);
-          }
-          render();
-          return;
-        }
-
-        if (action === 'isolate-chapter') {
-          e.stopPropagation();
-          const bookId = el.getAttribute('data-book-id');
-          const chapterId = el.getAttribute('data-chapter-id');
-          state.selectedBookId = bookId;
-          state.isolatedChapterId = chapterId;
-          const b = PREINSTALLED_BOOKS.find((item) => item.id === bookId);
-          const ch = b && b.chapters.find((c) => c.id === chapterId);
-          if (ch && ch.games[0]) {
-            state.selectedGameId = ch.games[0].id;
-            state.studyType = 'book_game';
-            state.canvasView = 'board';
-            state.currentPly = 0;
-            state.customFen = null;
-          }
-          render();
-          return;
-        }
-
-        if (action === 'exit-isolated-chapter') {
-          state.isolatedChapterId = null;
-          render();
-          return;
-        }
-
-        if (action === 'select-game') {
-          const bookId = el.getAttribute('data-book-id');
-          const gameId = el.getAttribute('data-game-id');
-          state.selectedBookId = bookId;
-          state.selectedGameId = gameId;
+    // Seletores rápidos de Livro e Capítulo
+    const selBook = document.getElementById('select-book-quick');
+    if (selBook) {
+      selBook.addEventListener('change', (e) => {
+        const bk = PREINSTALLED_BOOKS.find((b) => b.id === e.target.value);
+        if (bk && bk.chapters[0] && bk.chapters[0].games[0]) {
+          state.selectedBookId = bk.id;
+          state.selectedGameId = bk.chapters[0].games[0].id;
           state.studyType = 'book_game';
-          state.navDest = 'library';
-          state.canvasView = 'board';
-          state.currentPly = 0;
-          state.customFen = null;
-          state.selectedSquare = null;
-          state.hintLevel = 0;
-          state.lastFeedback = null;
-          render();
-          return;
+          goToPly(0, steps);
         }
+      });
+    }
 
-        if (action === 'select-opening-cat') {
-          state.selectedOpeningCat = el.getAttribute('data-cat');
-          render();
-          return;
-        }
+    const selGame = document.getElementById('select-game-quick');
+    if (selGame) {
+      selGame.addEventListener('change', (e) => {
+        state.selectedGameId = e.target.value;
+        state.studyType = 'book_game';
+        goToPly(0, steps);
+      });
+    }
 
-        if (action === 'select-opening') {
-          const openingId = el.getAttribute('data-opening-id');
-          state.selectedOpeningId = openingId;
-          state.studyType = 'opening';
-          state.canvasView = 'board';
-          state.currentPly = 0;
-          state.customFen = null;
-          state.selectedSquare = null;
-          state.hintLevel = 0;
-          state.lastFeedback = null;
-          const op = getCurrentOpening();
-          if (op.recommendedFor === 'black') {
-            state.trainerColor = 'b';
-            state.flipped = true;
-          } else {
-            state.trainerColor = 'w';
-            state.flipped = false;
-          }
-          render();
-          return;
-        }
+    // Controles do Tabuleiro
+    const btnFirst = document.getElementById('btn-ply-first');
+    if (btnFirst) btnFirst.addEventListener('click', () => goToPly(0, steps));
+    const btnPrev = document.getElementById('btn-ply-prev');
+    if (btnPrev) btnPrev.addEventListener('click', () => goToPly(state.currentPly - 1, steps));
+    const btnNext = document.getElementById('btn-ply-next');
+    if (btnNext) btnNext.addEventListener('click', () => goToPly(state.currentPly + 1, steps));
+    const btnFlip = document.getElementById('btn-flip-board');
+    if (btnFlip) {
+      btnFlip.addEventListener('click', () => {
+        state.flipped = !state.flipped;
+        renderApp();
+      });
+    }
 
-        if (action === 'set-trainer-color') {
-          const color = el.getAttribute('data-color');
-          state.trainerColor = color;
-          state.trainerActive = true;
-          if (color === 'w') state.flipped = false;
-          if (color === 'b') state.flipped = true;
-          render();
-          return;
-        }
+    const btnMute = document.getElementById('btn-toggle-mute');
+    if (btnMute) {
+      btnMute.addEventListener('click', () => {
+        state.soundMuted = !state.soundMuted;
+        chessAudio.setMuted(state.soundMuted);
+        renderApp();
+      });
+    }
 
-        if (action === 'toggle-trainer') {
-          state.trainerActive = !state.trainerActive;
-          state.lastFeedback = null;
-          state.hintLevel = 0;
-          render();
-          return;
-        }
+    const btnHint = document.getElementById('btn-ask-owl-hint');
+    if (btnHint) {
+      btnHint.addEventListener('click', () => {
+        state.hintLevel = state.hintLevel < 3 ? state.hintLevel + 1 : 1;
+        state.rightTab = 'mentors';
+        renderApp();
+      });
+    }
 
-        if (action === 'cycle-hint') {
-          state.hintLevel = state.hintLevel < 3 ? state.hintLevel + 1 : 1;
-          const { steps } = getCurrentSteps();
-          const nextStep = steps[state.currentPly];
-          if (state.hintLevel === 3 && nextStep) {
-            addToReviewQueue(nextStep, 'Solicitou dica nível 3 (solução completa)');
-          }
-          render();
-          return;
-        }
+    root.querySelectorAll('[data-set-hint]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.hintLevel = parseInt(btn.getAttribute('data-set-hint'), 10);
+        renderApp();
+      });
+    });
 
-        if (action === 'ply-first') {
-          goToPly(0);
-          return;
+    const btnSpeak = document.getElementById('btn-speak-voice');
+    if (btnSpeak) {
+      btnSpeak.addEventListener('click', () => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const currentStep = state.currentPly > 0 ? steps[state.currentPly - 1] : null;
+          const txt =
+            (currentStep && currentStep.annotation && currentStep.annotation.commentPt) ||
+            activeGame.introPt;
+          const u = new SpeechSynthesisUtterance(txt);
+          u.lang = 'pt-BR';
+          window.speechSynthesis.speak(u);
+        } else {
+          chessAudio.playSuccess();
         }
-        if (action === 'ply-prev') {
-          goToPly(state.currentPly - 1);
-          return;
-        }
-        if (action === 'ply-next') {
-          goToPly(state.currentPly + 1);
-          return;
-        }
-        if (action === 'ply-last') {
-          const { steps } = getCurrentSteps();
-          goToPly(steps.length);
-          return;
-        }
-        if (action === 'goto-ply') {
-          const ply = parseInt(el.getAttribute('data-ply'), 10);
-          goToPly(ply);
-          return;
-        }
+      });
+    }
 
-        if (action === 'flip-board') {
-          state.flipped = !state.flipped;
-          render();
-          return;
-        }
-
-        if (action === 'return-official-line') {
-          state.customFen = null;
-          state.customHistorySan = [];
-          state.selectedSquare = null;
-          render();
-          return;
-        }
-
-        if (action === 'square-click') {
-          const sq = el.getAttribute('data-square');
-          const { initialFen, steps } = getCurrentSteps();
-          const activeFen = getActiveFen(initialFen, steps);
-          handleSquareClick(sq, activeFen, steps);
-          return;
-        }
-
-        if (action === 'set-right-tab') {
-          state.rightTab = el.getAttribute('data-tab');
-          render();
-          return;
-        }
-
-        if (action === 'set-notation') {
-          state.notationMode = el.getAttribute('data-notation');
+    const btnComplete = document.getElementById('btn-mark-complete');
+    if (btnComplete) {
+      btnComplete.addEventListener('click', () => {
+        if (!state.completedGameIds.includes(activeGame.id)) {
+          state.completedGameIds.push(activeGame.id);
           persistState();
-          render();
-          return;
         }
+        chessAudio.playSuccess();
+        renderApp();
+      });
+    }
 
-        if (action === 'toggle-sound') {
-          state.soundMuted = !state.soundMuted;
-          chessAudio.setMuted(state.soundMuted);
-          render();
-          return;
-        }
+    const btnModeRead = document.getElementById('btn-mode-read');
+    if (btnModeRead) {
+      btnModeRead.addEventListener('click', () => {
+        state.trainerActive = false;
+        state.rightTab = 'book_reader';
+        renderApp();
+      });
+    }
 
-        if (action === 'toggle-complete-game') {
-          const { game } = getCurrentBookChapterGame();
-          if (state.completedGameIds.includes(game.id)) {
-            state.completedGameIds = state.completedGameIds.filter((id) => id !== game.id);
-          } else {
-            state.completedGameIds.push(game.id);
-            chessAudio.playSuccess();
-          }
-          persistState();
-          render();
-          return;
-        }
+    const btnModeChallenge = document.getElementById('btn-mode-challenge');
+    if (btnModeChallenge) {
+      btnModeChallenge.addEventListener('click', () => {
+        state.trainerActive = true;
+        state.rightTab = 'mentors';
+        state.customFen = null;
+        renderApp();
+      });
+    }
 
-        if (action === 'practice-review-item') {
-          const reviewId = el.getAttribute('data-review-id');
-          const item = state.reviewQueue.find((r) => r.id === reviewId);
-          if (item) {
-            state.studyType = item.studyType;
-            if (item.studyType === 'opening') {
-              state.selectedOpeningId = item.targetId;
-              state.navDest = 'openings';
-            } else {
-              state.selectedGameId = item.targetId;
-              state.navDest = 'library';
-            }
-            state.canvasView = 'board';
-            state.currentPly = item.ply;
-            state.trainerActive = true;
-            state.customFen = null;
-            state.hintLevel = 0;
-            state.lastFeedback = null;
-          }
-          render();
-          return;
-        }
-
-        if (action === 'open-ocr-modal') {
-          state.showOcrModal = true;
-          render();
-          return;
-        }
-
-        if (action === 'close-ocr-modal') {
-          state.showOcrModal = false;
-          render();
-          return;
+    // Interação de Clique e Promoção nas Casas do Tabuleiro
+    root.querySelectorAll('[data-promo]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const promo = btn.getAttribute('data-promo');
+        if (state.pendingPromotion) {
+          const { from, to } = state.pendingPromotion;
+          state.pendingPromotion = null;
+          executeMoveOnBoard(from, to, promo, steps, activeFen, nextExpectedStep, engineEval);
         }
       });
     });
+
+    root.querySelectorAll('[data-sq]').forEach((sqEl) => {
+      const sq = sqEl.getAttribute('data-sq');
+      sqEl.addEventListener('contextmenu', (e) => e.preventDefault());
+      sqEl.addEventListener('mousedown', (e) => {
+        if (e.button === 2) {
+          e.preventDefault();
+          state.rightClickStart = sq;
+          return;
+        }
+        if (e.button !== 0) return;
+
+        if (state.userArrows.length || state.userHighlights.length) {
+          state.userArrows = [];
+          state.userHighlights = [];
+        }
+
+        const c = new Chess(activeFen);
+        if (state.selectedSquare && state.selectedSquare !== sq) {
+          const legals = c.moves({ square: state.selectedSquare, verbose: true });
+          const match = legals.find((m) => m.to === sq);
+          if (match) {
+            if (match.promotion || (match.flags && match.flags.includes('p'))) {
+              state.pendingPromotion = { from: state.selectedSquare, to: sq, color: c.turn() };
+              state.selectedSquare = null;
+              renderApp();
+              return;
+            }
+            executeMoveOnBoard(state.selectedSquare, sq, 'q', steps, activeFen, nextExpectedStep, engineEval);
+            return;
+          }
+        }
+
+        const p = c.get(sq);
+        if (p && p.color === c.turn()) {
+          state.selectedSquare = sq;
+          renderApp();
+        } else if (state.selectedSquare) {
+          state.selectedSquare = null;
+          renderApp();
+        }
+      });
+
+      sqEl.addEventListener('mouseup', (e) => {
+        if (e.button === 2 && state.rightClickStart) {
+          e.preventDefault();
+          const drawCol = e.shiftKey
+            ? 'emerald'
+            : e.altKey
+            ? 'sky'
+            : e.metaKey || e.ctrlKey
+            ? 'rose'
+            : 'amber';
+          if (sq === state.rightClickStart) {
+            const exists = state.userHighlights.some((h) => h.square === sq);
+            state.userHighlights = exists
+              ? state.userHighlights.filter((h) => h.square !== sq)
+              : [...state.userHighlights, { square: sq, color: drawCol }];
+          } else {
+            const exists = state.userArrows.some(
+              (a) => a.from === state.rightClickStart && a.to === sq
+            );
+            state.userArrows = exists
+              ? state.userArrows.filter(
+                  (a) => !(a.from === state.rightClickStart && a.to === sq)
+                )
+              : [...state.userArrows, { from: state.rightClickStart, to: sq, color: drawCol }];
+          }
+          state.rightClickStart = null;
+          renderApp();
+        }
+      });
+    });
+
+    // Abrir capítulos da Biblioteca Mágica
+    root.querySelectorAll('[data-open-game]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedBookId = btn.getAttribute('data-open-book');
+        state.selectedGameId = btn.getAttribute('data-open-game');
+        state.studyType = 'book_game';
+        state.navDest = 'learn';
+        state.rightTab = 'book_reader';
+        state.trainerActive = false;
+        goToPly(0, steps);
+      });
+    });
+
+    const inputLibSearch = document.getElementById('input-library-search');
+    if (inputLibSearch) {
+      inputLibSearch.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        renderApp();
+        const el = document.getElementById('input-library-search');
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
+        }
+      });
+    }
+
+    // Abrir Aberturas e Estudos NotebookLM
+    root.querySelectorAll('[data-open-opening]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedOpeningId = btn.getAttribute('data-open-opening');
+        state.studyType = 'opening';
+        state.navDest = 'learn';
+        state.rightTab = 'book_reader';
+        state.trainerActive = false;
+        goToPly(0, steps);
+      });
+    });
+
+    root.querySelectorAll('[data-challenge-opening]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedOpeningId = btn.getAttribute('data-challenge-opening');
+        state.studyType = 'opening';
+        state.navDest = 'learn';
+        state.rightTab = 'mentors';
+        state.trainerActive = true;
+        goToPly(0, steps);
+      });
+    });
+
+    root.querySelectorAll('[data-open-custom]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedCustomStudyId = btn.getAttribute('data-open-custom');
+        state.studyType = 'custom_study';
+        state.navDest = 'learn';
+        state.rightTab = 'book_reader';
+        state.trainerActive = false;
+        goToPly(0, steps);
+      });
+    });
+
+    // Modal Google NotebookLM
+    const openNb1 = document.getElementById('btn-open-notebook-modal');
+    const openNb2 = document.getElementById('btn-open-notebook-modal-2');
+    [openNb1, openNb2].forEach((b) => {
+      if (b) {
+        b.addEventListener('click', () => {
+          state.isNotebookModalOpen = true;
+          renderApp();
+        });
+      }
+    });
+
+    const closeNb = document.getElementById('btn-close-notebook-modal');
+    const cancelNb = document.getElementById('btn-cancel-notebook-modal');
+    [closeNb, cancelNb].forEach((b) => {
+      if (b) {
+        b.addEventListener('click', () => {
+          state.isNotebookModalOpen = false;
+          renderApp();
+        });
+      }
+    });
+
+    const saveNb = document.getElementById('btn-save-notebook-study');
+    if (saveNb) {
+      saveNb.addEventListener('click', () => {
+        const titleEl = document.getElementById('nb-input-title');
+        const fenEl = document.getElementById('nb-input-fen');
+        const textEl = document.getElementById('nb-input-text');
+        const rawText = textEl ? textEl.value : state.nbText;
+        const customFen = fenEl && fenEl.value.trim() ? fenEl.value.trim() : undefined;
+        const titlePt =
+          (titleEl && titleEl.value.trim()) || 'Estudo Interativo Google NotebookLM';
+
+        const c = customFen ? new Chess(customFen) : new Chess();
+        const movesSan = [];
+        const annotations = {};
+        const paras = rawText
+          .split(/\n{2,}/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+
+        for (const p of paras) {
+          const words = p.split(/\s+/);
+          for (const w of words) {
+            const stripped = w.replace(/^\d+\.{1,3}/, '').replace(/[.,;!?)]+$/, '');
+            if (!stripped || /^\d+$/.test(stripped)) continue;
+            const sanCand = portugueseAlgebraicToSan(stripped);
+            try {
+              const mv = c.move(sanCand, { sloppy: true });
+              if (mv) movesSan.push(mv.san);
+            } catch {}
+          }
+          if (movesSan.length > 0 && !annotations[movesSan.length]) {
+            annotations[movesSan.length] = {
+              ply: movesSan.length,
+              commentPt: p.replace(/^#{1,3}\s+/, ''),
+            };
+          }
+        }
+
+        if (movesSan.length === 0) {
+          ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5'].forEach((m) => movesSan.push(m));
+        }
+
+        const newStudy = {
+          id: `nb-${Date.now()}`,
+          titlePt,
+          white: 'Brancas (NotebookLM)',
+          black: 'Pretas (NotebookLM)',
+          event: 'Caderno Google NotebookLM',
+          year: '2026',
+          result: '1-0',
+          openingNamePt: 'Estudo Google NotebookLM',
+          heroColor: 'w',
+          initialFen: customFen,
+          introPt: paras[0] || titlePt,
+          readingSectionsPt: paras.map((p, idx) => ({
+            headingPt: idx === 0 ? 'Notas do Google NotebookLM' : null,
+            bodyPt: p.replace(/^#{1,3}\s+/, ''),
+            focusPly: 1,
+          })),
+          keyTakeawaysPt: ['Estudo importado com movimentos clicáveis nos parágrafos.'],
+          movesSan,
+          annotations,
+        };
+
+        state.customStudies.unshift(newStudy);
+        state.selectedCustomStudyId = newStudy.id;
+        state.studyType = 'custom_study';
+        state.isNotebookModalOpen = false;
+        state.navDest = 'learn';
+        state.rightTab = 'book_reader';
+        persistState();
+        goToPly(0, steps);
+      });
+    }
   }
 
+  // Atalhos de Teclado Globais (←, →, ↑, ↓, F)
   window.addEventListener('keydown', (e) => {
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target && e.target.tagName)) {
-      if (e.key === 'Escape') e.target.blur();
-      return;
-    }
-    if (e.key === '/') {
-      e.preventDefault();
-      const input = document.getElementById('global-search-input');
-      if (input) input.focus();
-      return;
-    }
-    if (e.key === 'x' || e.key === 'X' || e.key === 'f' || e.key === 'F') {
-      e.preventDefault();
-      state.flipped = !state.flipped;
-      render();
-      return;
-    }
-    if (e.key === 'h' || e.key === 'H') {
-      e.preventDefault();
-      state.hintLevel = state.hintLevel < 3 ? state.hintLevel + 1 : 1;
-      render();
-      return;
-    }
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (state.navDest !== 'learn') return;
+    const activeGame = getActiveUnifiedGame();
+    const { steps } = buildGameSteps(activeGame);
     if (e.key === 'ArrowRight') {
       e.preventDefault();
-      goToPly(state.currentPly + 1);
+      goToPly(state.currentPly + 1, steps);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      goToPly(state.currentPly - 1);
-    } else if (e.key === 'Home') {
+      goToPly(state.currentPly - 1, steps);
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      goToPly(0);
-    } else if (e.key === 'End') {
+      goToPly(0, steps);
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const { steps } = getCurrentSteps();
-      goToPly(steps.length);
+      goToPly(steps.length, steps);
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      state.flipped = !state.flipped;
+      renderApp();
     }
   });
 
-  // Inicializa a interface
-  render();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderApp);
+  } else {
+    renderApp();
+  }
 })();

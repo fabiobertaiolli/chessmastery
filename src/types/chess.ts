@@ -2,13 +2,20 @@ import type { NotationMode } from '@shared/ui/chess/descriptiveNotation';
 
 export type { NotationMode };
 
-export type BoardThemeId = 'lichess_wood' | 'chesscom_green' | 'walnut_luxury' | 'slate_ice';
+export type BoardThemeId =
+  | 'stitch_wood'
+  | 'lichess_wood'
+  | 'chesscom_green'
+  | 'walnut_luxury'
+  | 'slate_ice';
 
 export type LanguageDisplayMode = 'pt' | 'original' | 'bilingual';
 
 export type AppStudyMode = 'study' | 'guess' | 'explore';
 
 export type MoveEvaluationBadge = '!!' | '!' | '!?' | '?!' | '?' | '??';
+
+export type StudyPhaseId = 'openings' | 'middlegame' | 'endgame';
 
 export interface BoardArrow {
   from: string; // ex: 'f3'
@@ -29,7 +36,13 @@ export interface MoveAnnotationData {
   hintPt?: string; // Dica posicional sem spoiler para o Modo Adivinhe
   arrows?: BoardArrow[];
   highlights?: SquareHighlight[];
-  alternativeLinePt?: string; // Explicação de variante secundária do livro
+  alternativeLinePt?: string; // Explicação de variante secundária do livro (com lances clicáveis)
+}
+
+export interface ReadingSectionPt {
+  headingPt?: string | null;
+  bodyPt: string; // Parágrafo editorial fluido com lances clicáveis em tempo real
+  focusPly?: number; // Ply de referência quando o usuário está lendo esta seção
 }
 
 export interface BookLessonGame {
@@ -43,13 +56,16 @@ export interface BookLessonGame {
   result: '1-0' | '0-1' | '1/2-1/2';
   eco?: string;
   openingNamePt: string;
+  studyPhase?: StudyPhaseId;
   heroColor: 'w' | 'b'; // Orientação recomendada e lado que o estudante joga no Modo Adivinhe
-  initialFen?: string; // Opcional para estudos de finais (ex: Lucena / Philidor)
+  initialFen?: string; // Opcional para estudos de finais ou meio-jogo (ex: Lucena / Philidor)
   introPt: string;
   introOriginal?: string;
+  readingSectionsPt?: ReadingSectionPt[]; // Parágrafos adicionais de leitura integral do livro
   keyTakeawaysPt: string[];
   movesSan: string[]; // Lista canônica validada pelo chess.js
   annotations: Record<number, MoveAnnotationData>; // Indexado por ply (1..N)
+  isCustomNotebookStudy?: boolean;
 }
 
 export interface BookChapter {
@@ -107,10 +123,8 @@ export interface EngineEvaluationResult {
   explanationPt: string;
 }
 
-export type StudySourceType = 'book_game' | 'opening';
+export type StudySourceType = 'book_game' | 'opening' | 'custom_study';
 
 export type NavDestination = 'learn' | 'library' | 'openings' | 'achievements';
 
 export type AppExperienceMode = 'aprender' | 'explorador';
-
-

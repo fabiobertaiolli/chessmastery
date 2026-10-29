@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"secondary-container":"#fea619","primary":"#006b49","secondary":"#855300","sky-soft":"#EFF6FF","inverse-on-surface":"#eaf1ff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#ffb95f","surface-container":"#e6eeff","on-secondary":"#ffffff","surface-container-lowest":"#ffffff","canvas-cream":"#FFF9ED","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","surface-container-highest":"#d5e3fc","primary-fixed":"#93f6c6","on-primary-container":"#fefffb","board-dark":"#B58A65","on-tertiary-container":"#ffffff","on-error-container":"#93000a","on-secondary-fixed-variant":"#653e00","on-surface-variant":"#3e4942","surface-card":"#FFFFFF","outline":"#6e7a72","on-secondary-container":"#684000","amber-soft":"#FEF3C7","board-light":"#F5E6CE","tertiary-fixed-dim":"#adc6ff","secondary-fixed":"#ffddb8","on-primary-fixed":"#002114","tertiary-fixed":"#d8e2ff","error-container":"#ffdad6","coral-vibrant":"#F87171","primary-container":"#16865e","on-secondary-fixed":"#2a1700","sky-vibrant":"#3B82F6","surface-container-low":"#eff4ff","on-primary":"#ffffff","mint-vibrant":"#16865E","amber-vibrant":"#F59E0B","surface-tint":"#006c4a","tertiary-container":"#2372e5","on-primary-fixed-variant":"#005237","error":"#ba1a1a","surface":"#f8f9ff","background":"#f8f9ff","outline-variant":"#bdcac0","surface-warm":"#FBF8F1","surface-variant":"#d5e3fc","inverse-primary":"#77d9ab","primary-fixed-dim":"#77d9ab","tertiary":"#0059c0","surface-bright":"#f8f9ff","surface-dim":"#ccdbf3","mint-soft":"#E2F6EA","on-surface":"#0d1c2e","coral-soft":"#FEE2E2","on-error":"#ffffff","on-background":"#0d1c2e","surface-container-high":"#dce9ff","inverse-surface":"#233144"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"1.25rem","space-sm":"0.75rem","margin":"1.5rem","space-lg":"1.75rem","space-xs":"0.375rem","space-xl":"2.5rem","gutter":"1.25rem"},"fontFamily":{"headline-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"chess-move-num":["Plus Jakarta Sans"],"display-hero":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"display-hero-mobile":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"label-badge":["Plus Jakarta Sans"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"chess-move-num":["22px",{"lineHeight":"28px","letterSpacing":"0.02em","fontWeight":"800"}],"display-hero":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-lg":["15px",{"lineHeight":"20px","fontWeight":"700"}],"body-md":["15px",{"lineHeight":"22px","fontWeight":"400"}],"display-hero-mobile":["26px",{"lineHeight":"34px","letterSpacing":"-0.01em","fontWeight":"800"}],"body-lg":["17px",{"lineHeight":"26px","fontWeight":"500"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"18px","fontWeight":"600"}],"label-badge":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}}</script></head><body class="bg-canvas-cream font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-canvas-cream/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(181,138,101,0.08)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-11 h-11 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_4px_12px_rgba(22,134,94,0.2)]"><span class="material-symbols-outlined text-[24px]">chess_knight</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">Chess Mastery Kids</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Estúdio Lúdico</span></div></div></div><nav class="hidden lg:flex items-center bg-surface-card/80 p-1.5 rounded-xl shadow-[0_2px_10px_rgba(181,138,101,0.06)]" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm shadow-sm"><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="aprender" href="#">Aprender</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="biblioteca-magica" href="#">Biblioteca Mágica</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="aberturas-e-desafios" href="#">Aberturas &amp; Desafios</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="conquistas-e-estrelas" href="#">Conquistas &amp; Estrelas</a></nav><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1 px-space-sm py-1.5 bg-amber-soft text-on-secondary-container rounded-full font-label-badge text-label-badge shadow-[0_2px_8px_rgba(245,158,11,0.15)]"><span class="material-symbols-outlined text-[16px] text-amber-vibrant">star</span><span>42 ⭐</span></div><button aria-label="Buscar" class="w-9 h-9 rounded-full bg-surface-card text-on-surface-variant flex items-center justify-center hover:bg-surface-container-low hover:text-on-surface transition-all shadow-[0_2px_8px_rgba(181,138,101,0.06)]" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><button aria-label="Som do Jogo" class="w-9 h-9 rounded-full bg-surface-card text-on-surface-variant flex items-center justify-center hover:bg-surface-container-low hover:text-on-surface transition-all shadow-[0_2px_8px_rgba(181,138,101,0.06)]" type="button"><span class="material-symbols-outlined text-[20px]">volume_up</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-canvas-cream min-h-screen"><div class="flex flex-col w-full">
+<div class="max-w-7xl mx-auto px-margin py-space-lg w-full flex flex-col gap-space-xl">
+<!-- Top Bar Navigation Highlight sync script -->
+<script>
+      (function() {
+        const navLinks = document.querySelectorAll('header nav a');
+        navLinks.forEach(link => {
+          if (link.getAttribute('data-path') === 'biblioteca-magica') {
+            link.classList.remove('text-on-surface-variant');
+            link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-headline-sm', 'shadow-sm');
+          } else {
+            link.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-headline-sm', 'shadow-sm');
+            link.classList.add('text-on-surface-variant');
+          }
+        });
+      })();
+    </script>
+<!-- SECTION 1: CABEÇALHO DA BIBLIOTECA MÁGICA -->
+<div class="flex flex-col gap-space-md">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<div class="inline-flex items-center gap-2 self-start px-space-sm py-1 bg-amber-soft text-on-secondary-container rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-amber-vibrant">auto_stories</span>
+<span class="font-label-badge text-label-badge uppercase tracking-wider">Estudo Guiado &amp; Narrativa Clássica</span>
+</div>
+<h1 class="font-display-hero text-display-hero text-on-surface tracking-tight">
+            📚 Biblioteca Mágica de Histórias e Mestres
+          </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+            Explore os 4 grandes livros de xadrez, descubra as aventuras dos grandes mestres e desbloqueie segredos mágicos do tabuleiro!
+          </p>
+</div>
+<!-- Indicador de Conquistas da Biblioteca -->
+<div class="flex items-center gap-space-md bg-surface-card p-space-md rounded-2xl shadow-[0_4px_20px_rgba(181,138,101,0.08)] self-start lg:self-auto shrink-0">
+<div class="w-12 h-12 rounded-xl bg-amber-soft flex items-center justify-center text-amber-vibrant shadow-inner">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Seu Progresso de Leitura</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-chess-move-num text-chess-move-num text-primary">3</span>
+<span class="font-label-md text-label-md text-on-surface-variant">de 11 Capítulos</span>
+</div>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[15px] text-amber-vibrant" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-label-badge text-label-badge">12 Estrelas Coletadas</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Barra de Busca & Filtros Lúdicos -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-sm items-center bg-surface-card p-space-xs rounded-full shadow-[0_4px_16px_rgba(181,138,101,0.06)]">
+<div class="md:col-span-8 lg:col-span-9 flex items-center gap-space-sm pl-space-md py-1">
+<span class="material-symbols-outlined text-primary text-[24px]">search</span>
+<input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none" placeholder="Buscar por histórias, mestres (ex: Capablanca, Tal) ou conceitos mágicos..." type="text"/>
+</div>
+<div class="md:col-span-4 lg:col-span-3 flex items-center justify-end gap-2 pr-1">
+<button class="flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-mint-soft text-mint-vibrant font-label-md text-label-md hover:bg-primary-fixed transition-all">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Filtro Mágico</span>
+</button>
+<button class="px-space-md py-2.5 rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-sm transition-all">
+            Explorar
+          </button>
+</div>
+</div>
+</div>
+<!-- SECTION 2: HERO CARD - LEITURA ATUAL (CONTINUAÇÃO) -->
+<div class="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-mint-soft via-surface-card to-amber-soft/40 p-space-lg lg:p-space-xl shadow-[0_12px_32px_rgba(22,134,94,0.08)]">
+<div class="relative z-10 flex flex-col lg:flex-row gap-space-xl items-center justify-between">
+<!-- Bloco de Conteúdo do Livro Atual -->
+<div class="flex flex-col gap-space-md max-w-2xl">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="px-space-sm py-1 rounded-full bg-mint-vibrant text-on-primary font-label-badge text-label-badge">
+              Leitura em Andamento
+            </span>
+<span class="px-space-sm py-1 rounded-full bg-surface-card text-on-surface-variant font-label-badge text-label-badge shadow-sm">
+              Livro 1 de 4
+            </span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-lg text-label-lg text-primary tracking-wide">Orfeu Gilberto D'Agostini</span>
+<h2 class="font-display-hero text-display-hero text-on-surface leading-tight tracking-tight">
+              Xadrez Básico — O Guia dos Pequenos Mestres
+            </h2>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px] text-primary">bookmark_manager</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Capítulo 1: O Domínio das Colunas e o Grande Ataque</span>
+</div>
+</div>
+<!-- Barra de Progresso com Estrelas -->
+<div class="flex flex-col gap-2 bg-surface-card/90 backdrop-blur-sm p-space-md rounded-2xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-amber-vibrant text-[18px]">verified</span>
+                Progresso no Capítulo
+              </span>
+<span class="font-label-lg text-label-lg text-primary">60% concluído (3 de 5 desafios vencidos)</span>
+</div>
+<!-- Slider Candy Track -->
+<div class="w-full h-3.5 bg-surface-container-high rounded-full overflow-hidden p-0.5 shadow-inner">
+<div class="h-full bg-gradient-to-r from-primary to-primary-container rounded-full w-[60%] transition-all duration-500"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant font-label-badge text-label-badge pt-1">
+<span>⭐ Estudo da Torre Aberta</span>
+<span>⭐ A Invasão da 7ª Fila</span>
+<span>⭐ Capablanca vs Tartakower</span>
+<span class="text-on-surface-variant/40">⭐ Ataque Duplo</span>
+<span class="text-on-surface-variant/40">⭐ Troféu de Ouro</span>
+</div>
+</div>
+<!-- Personagens Tutores (Dica Lúdica) -->
+<div class="flex items-start gap-space-sm p-space-md rounded-2xl bg-amber-soft/70 shadow-sm">
+<div class="flex -space-x-3 shrink-0">
+<div class="w-11 h-11 rounded-full bg-surface-card flex items-center justify-center text-[22px] shadow-sm">
+                🦉
+              </div>
+<div class="w-11 h-11 rounded-full bg-sky-soft flex items-center justify-center text-[22px] shadow-sm">
+                🤖
+              </div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge uppercase text-secondary">Dica da Coruja Sofia &amp; Robô Pipo:</span>
+<p class="font-body-md text-body-md text-on-secondary-container mt-0.5">
+                “Você está quase destrinchando o segredo das Torres de Capablanca! Falta só 1 partida para a medalha de ouro!”
+              </p>
+</div>
+</div>
+<!-- Botões de Ação -->
+<div class="flex flex-wrap items-center gap-space-sm pt-2">
+<button class="h-12 px-space-xl rounded-xl bg-mint-vibrant text-on-primary font-headline-sm text-headline-sm shadow-[0_8px_20px_rgba(22,134,94,0.25)] hover:bg-primary transition-all flex items-center gap-2 active:translate-y-0.5">
+<span>Continuar Aventura</span>
+<span class="material-symbols-outlined text-[20px]">play_arrow</span>
+</button>
+<button class="h-12 px-space-lg rounded-xl bg-surface-card text-on-surface font-label-lg text-label-lg shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">map</span>
+<span>Ver Mapa do Capítulo 🗺️</span>
+</button>
+</div>
+</div>
+<!-- Capa Tridimensional e Miniatura do Tabuleiro em Destaque -->
+<div class="relative w-full max-w-sm flex justify-center">
+<div class="relative w-72 h-96 rounded-2xl bg-gradient-to-tr from-primary to-primary-container p-4 text-on-primary flex flex-col justify-between shadow-[0_20px_40px_rgba(22,134,94,0.22)] transform hover:rotate-1 transition-transform">
+<!-- Detalhe lombada de livro infantil -->
+<div class="absolute left-0 top-0 bottom-0 w-4 bg-primary-fixed-dim/30 rounded-l-2xl"></div>
+<div class="flex justify-between items-start pl-3">
+<div class="w-10 h-10 rounded-xl bg-on-primary/20 backdrop-blur-md flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">castle</span>
+</div>
+<span class="px-2.5 py-1 bg-amber-vibrant text-on-primary rounded-full font-label-badge text-label-badge shadow-sm">
+                Clássico BR
+              </span>
+</div>
+<!-- Centro da Capa com Ilustração Temática -->
+<div class="flex flex-col items-center justify-center text-center px-3 my-auto">
+<div class="w-24 h-24 rounded-2xl bg-canvas-cream/15 flex items-center justify-center shadow-inner mb-3">
+<span class="material-symbols-outlined text-[54px] text-amber-soft">chess_rook</span>
+</div>
+<span class="font-headline-lg text-headline-lg font-bold leading-tight">Xadrez Básico</span>
+<span class="font-body-sm text-body-sm text-primary-fixed mt-1">Orfeu Gilberto D'Agostini</span>
+</div>
+<!-- Rodapé da Capa -->
+<div class="bg-on-primary/10 rounded-xl p-2.5 flex items-center justify-between text-on-primary pl-4">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-amber-soft">auto_awesome</span>
+<span class="font-label-badge text-label-badge">Edição Kids Interativa</span>
+</div>
+<span class="font-chess-move-num text-label-md">Vol. I</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: PRATELEIRA DOS 4 LIVROS CLÁSSICOS -->
+<div class="flex flex-col gap-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">menu_book</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Prateleira dos Livros Encantados</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Selecione uma das obras canônicas para abrir estudos comentados, jogos históricos e desafios táticos.
+          </p>
+</div>
+<div class="flex items-center gap-2 self-start md:self-auto">
+<span class="font-label-badge text-label-badge text-on-surface-variant">Filtrar por:</span>
+<span class="px-space-sm py-1 rounded-full bg-surface-card text-primary font-label-md text-label-md shadow-sm">Todos (4)</span>
+<span class="px-space-sm py-1 rounded-full bg-canvas-cream text-on-surface-variant font-label-md text-label-md hover:bg-surface-card transition-all">Em Andamento</span>
+</div>
+</div>
+<!-- Grid Bento de 4 Livros -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<!-- LIVRO 1: XADREZ BÁSICO -->
+<div class="flex flex-col justify-between bg-surface-card rounded-2xl p-space-lg shadow-[0_4px_20px_rgba(181,138,101,0.06)] hover:shadow-[0_8px_30px_rgba(22,134,94,0.12)] transition-all">
+<div class="flex flex-col gap-space-md">
+<!-- Header do Card -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-14 h-14 rounded-2xl bg-mint-soft flex items-center justify-center text-mint-vibrant shadow-sm">
+<span class="material-symbols-outlined text-[32px]">chess_rook</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-mint-vibrant uppercase">Recomendado para Iniciantes</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Xadrez Básico</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Orfeu Gilberto D'Agostini</span>
+</div>
+</div>
+<span class="px-space-sm py-1 bg-amber-soft text-on-secondary-container rounded-full font-label-badge text-label-badge flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[14px] text-amber-vibrant" style="font-variation-settings: 'FILL' 1;">star</span>
+                3/5 estrelas
+              </span>
+</div>
+<!-- Subtítulo e Descrição Pedagógica -->
+<div class="flex flex-col gap-1">
+<span class="font-label-lg text-label-lg text-primary">“O Reino das Torres e Estradas Abertas”</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Aprenda a guiar suas peças pelas colunas do tabuleiro, monte fortalezas impenetráveis e descubra como as Torres se tornam gigantes invencíveis na sétima fila.
+              </p>
+</div>
+<!-- Métricas / Badges lúdicas -->
+<div class="flex items-center gap-space-md py-space-xs px-space-sm bg-surface-warm rounded-xl text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">collections_bookmark</span>
+<span>4 Capítulos</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">extension</span>
+<span>5 Estudos Mágicos</span>
+</div>
+<span>•</span>
+<span class="text-mint-vibrant font-headline-sm text-label-badge">Em andamento</span>
+</div>
+<!-- Prévia de Capítulos (Accordions Lúdicos) -->
+<details class="group bg-surface-container-low/60 rounded-xl p-space-sm transition-all" open="">
+<summary class="list-none flex items-center justify-between cursor-pointer font-label-md text-label-md text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
+                  Ver capítulos e missões
+                </span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="flex flex-col gap-2 mt-3 pt-2 text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-mint-vibrant text-on-primary flex items-center justify-center font-label-badge text-[11px]">1</span>
+<span>A Grande Invasão das Torres</span>
+</div>
+<span class="text-amber-vibrant flex items-center gap-0.5">⭐⭐⭐</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-badge text-[11px]">2</span>
+<span>O Poder do Bispo em Diagonal</span>
+</div>
+<span class="text-on-surface-variant/40">Desafio Pendente</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-badge text-[11px]">3</span>
+<span>O Escudo do Rei e o Roque Seguro</span>
+</div>
+<span class="text-on-surface-variant/40">Bloqueado</span>
+</div>
+</div>
+</details>
+</div>
+<!-- Ação do Card -->
+<div class="pt-space-md mt-auto">
+<button class="w-full h-12 rounded-xl bg-mint-vibrant text-on-primary font-headline-sm text-headline-sm shadow-md hover:bg-primary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">auto_stories</span>
+<span>Continuar Leitura 📖</span>
+</button>
+</div>
+</div>
+<!-- LIVRO 2: MEU SISTEMA -->
+<div class="flex flex-col justify-between bg-surface-card rounded-2xl p-space-lg shadow-[0_4px_20px_rgba(181,138,101,0.06)] hover:shadow-[0_8px_30px_rgba(22,134,94,0.12)] transition-all">
+<div class="flex flex-col gap-space-md">
+<!-- Header do Card -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-14 h-14 rounded-2xl bg-sky-soft flex items-center justify-center text-sky-vibrant shadow-sm">
+<span class="material-symbols-outlined text-[32px]">shield</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-tertiary uppercase">Estratégia dos Defensores</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Meu Sistema (Mi Sistema)</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Aron Nimzowitsch</span>
+</div>
+</div>
+<span class="px-space-sm py-1 bg-mint-soft text-mint-vibrant rounded-full font-label-badge text-label-badge flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[14px]">lock_open</span>
+                Desbloqueado
+              </span>
+</div>
+<!-- Subtítulo e Descrição Pedagógica -->
+<div class="flex flex-col gap-1">
+<span class="font-label-lg text-label-lg text-tertiary">“Os Guardiões do Centro e o Bloqueio”</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Descubra a arte secreta de acorrentar as peças do adversário com peões sentinelas, criar postos avançados e proteger seu castelo com super-defesas.
+              </p>
+</div>
+<!-- Métricas / Badges lúdicas -->
+<div class="flex items-center gap-space-md py-space-xs px-space-sm bg-surface-warm rounded-xl text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary">collections_bookmark</span>
+<span>3 Capítulos</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">extension</span>
+<span>3 Estudos Mágicos</span>
+</div>
+<span>•</span>
+<span class="text-tertiary font-headline-sm text-label-badge">Disponível</span>
+</div>
+<!-- Prévia de Capítulos -->
+<details class="group bg-surface-container-low/60 rounded-xl p-space-sm transition-all">
+<summary class="list-none flex items-center justify-between cursor-pointer font-label-md text-label-md text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary">visibility</span>
+                  Ver capítulos e missões
+                </span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="flex flex-col gap-2 mt-3 pt-2 text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-label-badge text-[11px]">1</span>
+<span>O Centro Ocupado vs Centro Vigiado</span>
+</div>
+<span class="text-primary font-label-badge">Pronto p/ Jogar</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-badge text-[11px]">2</span>
+<span>A Peça Sentinela e a Corrente de Peões</span>
+</div>
+<span class="text-on-surface-variant/40">Bloqueado</span>
+</div>
+</div>
+</details>
+</div>
+<!-- Ação do Card -->
+<div class="pt-space-md mt-auto">
+<button class="w-full h-12 rounded-xl bg-surface-container-high text-on-surface font-headline-sm text-headline-sm hover:bg-tertiary hover:text-on-tertiary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">explore</span>
+<span>Explorar Capítulos</span>
+</button>
+</div>
+</div>
+<!-- LIVRO 3: VIDA E PARTIDAS DE MIKHAIL TAL -->
+<div class="flex flex-col justify-between bg-surface-card rounded-2xl p-space-lg shadow-[0_4px_20px_rgba(181,138,101,0.06)] hover:shadow-[0_8px_30px_rgba(248,113,113,0.15)] transition-all">
+<div class="flex flex-col gap-space-md">
+<!-- Header do Card -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-14 h-14 rounded-2xl bg-coral-soft flex items-center justify-center text-coral-vibrant shadow-sm">
+<span class="material-symbols-outlined text-[32px]">bolt</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-coral-vibrant uppercase">Ataques Mágicos</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Vida e Partidas de Mikhail Tal</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mikhail Tal (O Mago de Riga)</span>
+</div>
+</div>
+<span class="px-space-sm py-1 bg-coral-soft text-on-error-container rounded-full font-label-badge text-label-badge flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                15 Estrelas Necessárias
+              </span>
+</div>
+<!-- Subtítulo e Descrição Pedagógica -->
+<div class="flex flex-col gap-1">
+<span class="font-label-lg text-label-lg text-coral-vibrant">“O Mago dos Ataques e Sacrifícios Relâmpago”</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Mergulhe no caldeirão de feitiços de Tal! Entenda como entregar cavalos e bispos de mentirinha para criar tempestades invencíveis contra o rei adversário.
+              </p>
+</div>
+<!-- Métricas / Badges lúdicas -->
+<div class="flex items-center gap-space-md py-space-xs px-space-sm bg-surface-warm rounded-xl text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-coral-vibrant">collections_bookmark</span>
+<span>2 Capítulos</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">extension</span>
+<span>2 Estudos Mágicos</span>
+</div>
+<span>•</span>
+<span class="text-coral-vibrant font-headline-sm text-label-badge">Faltam 3 ⭐</span>
+</div>
+<!-- Prévia de Capítulos -->
+<div class="p-space-sm rounded-xl bg-coral-soft/30 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-coral-vibrant text-[20px]">lock_clock</span>
+<span class="font-body-sm text-body-sm text-on-surface">Desbloqueável com mais 3 vitórias na Biblioteca!</span>
+</div>
+<span class="font-label-badge text-label-badge text-coral-vibrant uppercase">Em Breve</span>
+</div>
+</div>
+<!-- Ação do Card -->
+<div class="pt-space-md mt-auto">
+<button class="w-full h-12 rounded-xl bg-surface-container-high/60 text-on-surface-variant font-headline-sm text-headline-sm cursor-not-allowed flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+<span>Desbloquear com 15 Estrelas ⭐</span>
+</button>
+</div>
+</div>
+<!-- LIVRO 4: MEUS GRANDES PREDECESSORES (BOBBY FISCHER) -->
+<div class="flex flex-col justify-between bg-surface-card rounded-2xl p-space-lg shadow-[0_4px_20px_rgba(181,138,101,0.06)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.15)] transition-all">
+<div class="flex flex-col gap-space-md">
+<!-- Header do Card -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-14 h-14 rounded-2xl bg-amber-soft flex items-center justify-center text-amber-vibrant shadow-sm">
+<span class="material-symbols-outlined text-[32px]">military_tech</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge text-secondary uppercase">Batalhas Históricas</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Meus Grandes Predecessores: Fischer</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Garry Kasparov</span>
+</div>
+</div>
+<span class="px-space-sm py-1 bg-mint-soft text-mint-vibrant rounded-full font-label-badge text-label-badge flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[14px]">lock_open</span>
+                Desbloqueado
+              </span>
+</div>
+<!-- Subtítulo e Descrição Pedagógica -->
+<div class="flex flex-col gap-1">
+<span class="font-label-lg text-label-lg text-secondary">“A Busca pela Perfeição e a Coroa Mundial”</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                Descubra a história do garoto prodígio americano que enfrentou os gigantes soviéticos. Lances precisos como um relógio suíço e ataques que mudaram a história do esporte!
+              </p>
+</div>
+<!-- Métricas / Badges lúdicas -->
+<div class="flex items-center gap-space-md py-space-xs px-space-sm bg-surface-warm rounded-xl text-on-surface-variant font-label-md text-label-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">collections_bookmark</span>
+<span>2 Capítulos</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">extension</span>
+<span>2 Estudos Mágicos</span>
+</div>
+<span>•</span>
+<span class="text-secondary font-headline-sm text-label-badge">Disponível</span>
+</div>
+<!-- Prévia de Capítulos -->
+<details class="group bg-surface-container-low/60 rounded-xl p-space-sm transition-all">
+<summary class="list-none flex items-center justify-between cursor-pointer font-label-md text-label-md text-on-surface">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary">visibility</span>
+                  Ver capítulos e missões
+                </span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="flex flex-col gap-2 mt-3 pt-2 text-on-surface font-body-sm text-body-sm">
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-amber-vibrant text-on-primary flex items-center justify-center font-label-badge text-[11px]">1</span>
+<span>O Jogo do Século aos 13 Anos</span>
+</div>
+<span class="text-primary font-label-badge">Pronto p/ Jogar</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-card">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-label-badge text-[11px]">2</span>
+<span>O Match de Reykjavik contra Spassky</span>
+</div>
+<span class="text-on-surface-variant/40">Bloqueado</span>
+</div>
+</div>
+</details>
+</div>
+<!-- Ação do Card -->
+<div class="pt-space-md mt-auto">
+<button class="w-full h-12 rounded-xl bg-surface-container-high text-on-surface font-headline-sm text-headline-sm hover:bg-secondary hover:text-on-secondary transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">explore</span>
+<span>Explorar Capítulos</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 4: PAINEL DE AUDITORIA LÚDICA & FONTES HISTÓRICAS (OCR REAIS) -->
+<div class="rounded-2xl bg-surface-card p-space-lg shadow-[0_4px_16px_rgba(181,138,101,0.06)] flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-14 h-14 rounded-2xl bg-sky-soft text-sky-vibrant flex items-center justify-center shrink-0 shadow-inner">
+<span class="material-symbols-outlined text-[30px]">saved_search</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface">🔎 De Onde Vêm Essas Histórias?</span>
+<span class="px-2 py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge">Fidelidade Histórica 100%</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+            Nossos livros usam páginas históricas originais, digitalizadas e traduzidas com carinho, e testadas lance a lance pelo motor amigo Pipo para garantir partidas reais e seguras!
+          </p>
+</div>
+</div>
+<!-- Botão Modal Fontes -->
+<button class="h-11 px-space-md rounded-xl bg-surface-container-low text-primary hover:bg-mint-soft font-label-md text-label-md transition-all shrink-0 flex items-center gap-1.5 shadow-sm" onclick="document.getElementById('modal-fontes').classList.remove('hidden')">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Ver Detalhes das Fontes Históricas</span>
+</button>
+</div>
+</div>
+<!-- MODAL DE AUDITORIA HISTÓRICA LÚDICA (POPUP SEGURO) -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm p-4" id="modal-fontes">
+<div class="bg-surface-card rounded-2xl max-w-lg w-full p-space-lg shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[28px]">history_edu</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Nossos Registros Históricos</h3>
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-surface-dim" onclick="document.getElementById('modal-fontes').classList.add('hidden')">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Cada partida desta Biblioteca Mágica foi conferida através de transcrições fiéis dos manuscritos e edições clássicas publicadas entre 1925 e 2003:
+      </p>
+<div class="flex flex-col gap-2 font-body-sm text-body-sm">
+<div class="p-2.5 rounded-xl bg-surface-warm flex items-center justify-between">
+<span class="text-on-surface">📜 <strong>Xadrez Básico:</strong> Edição Brasileira Clássica (D'Agostini)</span>
+<span class="text-mint-vibrant font-label-badge">Verificado</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-warm flex items-center justify-between">
+<span class="text-on-surface">📜 <strong>Mein System:</strong> Publicação Original 1925 (Nimzowitsch)</span>
+<span class="text-mint-vibrant font-label-badge">Verificado</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-warm flex items-center justify-between">
+<span class="text-on-surface">📜 <strong>The Life and Games of Mikhail Tal:</strong> RHM Press 1976</span>
+<span class="text-mint-vibrant font-label-badge">Verificado</span>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-warm flex items-center justify-between">
+<span class="text-on-surface">📜 <strong>My Great Predecessors Vol. IV:</strong> Everyman Chess 2004</span>
+<span class="text-mint-vibrant font-label-badge">Verificado</span>
+</div>
+</div>
+<div class="pt-2 flex justify-end">
+<button class="h-10 px-space-md rounded-xl bg-primary text-on-primary font-label-md text-label-md" onclick="document.getElementById('modal-fontes').classList.add('hidden')">
+          Entendido, Pequeno Mestre!
+        </button>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-warm/80 py-space-lg mt-space-xl shadow-[0_-4px_16px_rgba(181,138,101,0.04)]"><div class="max-w-7xl mx-auto px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[16px]">auto_stories</span></div><span class="font-label-md text-label-md text-on-surface">Chess Mastery Kids • Estúdio Mágico de Aprendizagem</span></div><div class="flex items-center gap-space-md"><span class="font-body-sm text-body-sm text-on-surface-variant">Feito com carinho para pequenos mestres</span><div class="flex items-center gap-1 text-amber-vibrant"><span class="material-symbols-outlined text-[18px]">military_tech</span><span class="font-label-badge text-label-badge text-on-surface">Nível Peão Explorador</span></div></div></div></footer></body></html>

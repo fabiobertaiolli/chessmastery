@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { getBoardCoordinates } from '@shared/ui/chess/descriptiveNotation';
 import { ChessPieceSvg } from './ChessPiecesSvg';
@@ -12,39 +12,54 @@ import type {
 
 export const BOARD_THEMES: Record<
   BoardThemeId,
-  { name: string; light: string; dark: string; lastMoveLight: string; lastMoveDark: string; border: string }
+  {
+    name: string;
+    light: string;
+    dark: string;
+    lastMoveLight: string;
+    lastMoveDark: string;
+    border: string;
+  }
 > = {
-  lichess_wood: {
-    name: 'Lichess Wood',
-    light: '#f0d9b5',
-    dark: '#b58863',
-    lastMoveLight: '#cdd26a',
-    lastMoveDark: '#aaa23a',
-    border: '#3d2e22',
+  stitch_wood: {
+    name: 'Estúdio Madeira Artesanal',
+    light: '#F5E6CE',
+    dark: '#B58A65',
+    lastMoveLight: '#CBEFD8',
+    lastMoveDark: '#69B084',
+    border: '#9E7350',
   },
   chesscom_green: {
-    name: 'Tournament Green',
-    light: '#eeeed2',
+    name: 'Chess.com Tournament',
+    light: '#EEEED2',
     dark: '#769656',
-    lastMoveLight: '#f6f669',
-    lastMoveDark: '#baca2b',
-    border: '#26331b',
+    lastMoveLight: '#F6F669',
+    lastMoveDark: '#BACA2B',
+    border: '#4E6538',
+  },
+  lichess_wood: {
+    name: 'Lichess Classic Wood',
+    light: '#F0D9B5',
+    dark: '#B58863',
+    lastMoveLight: '#CDD26A',
+    lastMoveDark: '#AAA23A',
+    border: '#7A593E',
   },
   walnut_luxury: {
-    name: 'Walnut Classic',
-    light: '#ead8c0',
-    dark: '#8b5a2b',
-    lastMoveLight: '#e4c96b',
-    lastMoveDark: '#a68232',
-    border: '#2c1b0e',
+    name: 'Nogueira Real',
+    light: '#EAD8C0',
+    dark: '#8B5A2B',
+    lastMoveLight: '#E4C96B',
+    lastMoveDark: '#A68232',
+    border: '#5C3A1B',
   },
   slate_ice: {
-    name: 'Obsidian Slate',
-    light: '#dee3e6',
-    dark: '#78909c',
-    lastMoveLight: '#9be0c8',
-    lastMoveDark: '#55ab91',
-    border: '#1e293b',
+    name: 'Cristal Azul',
+    light: '#DEE3E6',
+    dark: '#78909C',
+    lastMoveLight: '#9BE0C8',
+    lastMoveDark: '#55AB91',
+    border: '#475569',
   },
 };
 
@@ -80,16 +95,23 @@ function getBadgeStyle(badge: MoveEvaluationBadge): { bg: string; text: string; 
     case '!!':
       return { bg: '#06b6d4', text: '#ffffff', label: '!!' };
     case '!':
-      return { bg: '#3b82f6', text: '#ffffff', label: '!' };
+      return { bg: '#16865E', text: '#ffffff', label: '!' };
     case '!?':
-      return { bg: '#8b5cf6', text: '#ffffff', label: '!?' };
+      return { bg: '#3B82F6', text: '#ffffff', label: '!?' };
     case '?!':
-      return { bg: '#f59e0b', text: '#18181b', label: '?!' };
+      return { bg: '#F59E0B', text: '#18181b', label: '?!' };
     case '?':
-      return { bg: '#f97316', text: '#ffffff', label: '?' };
+      return { bg: '#F97316', text: '#ffffff', label: '?' };
     case '??':
-      return { bg: '#ef4444', text: '#ffffff', label: '??' };
+      return { bg: '#EF4444', text: '#ffffff', label: '??' };
   }
+}
+
+function getModifierDrawColor(e: React.MouseEvent): 'emerald' | 'amber' | 'rose' | 'sky' {
+  if (e.shiftKey) return 'emerald';
+  if (e.altKey) return 'sky';
+  if (e.metaKey || e.ctrlKey) return 'rose';
+  return 'amber';
 }
 
 export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
@@ -105,13 +127,69 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
   onUserMove,
   interactive = true,
 }) => {
-  const theme = BOARD_THEMES[themeId] || BOARD_THEMES.lichess_wood;
+  const theme = BOARD_THEMES[themeId] || BOARD_THEMES.stitch_wood;
   const boardRef = useRef<HTMLDivElement>(null);
 
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [draggingFrom, setDraggingFrom] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [hoveredSquare, setHoveredSquare] = useState<string | null>(null);
+
+  // Seletor visual de promoção de peão estilo Chess.com
+  const [pendingPromotion, setPendingPromotion] = useState<{
+    from: string;
+    to: string;
+    color: 'w' | 'b';
+  } | null>(null);
+
+  // Animação suave de deslize da peça quando o lance muda (clique no parágrafo ou navegação)
+  const [slideOffset, setSlideOffset] = useState<{
+    square: string;
+    dxPercent: number;
+    dyPercent: number;
+    active: boolean;
+  } | null>(null);
+
+  const prevLastMoveRef = useRef<string>('');
+
+  useEffect(() => {
+    const moveKey = lastMove ? `${lastMove.from}-${lastMove.to}-${fen}` : '';
+    if (lastMove && moveKey !== prevLastMoveRef.current) {
+      prevLastMoveRef.current = moveKey;
+      const start = squareToCoords(lastMove.from, flipped);
+      const end = squareToCoords(lastMove.to, flipped);
+      const dxPercent = (start.col - end.col) * 100;
+      const dyPercent = (start.row - end.row) * 100;
+
+      setSlideOffset({
+        square: lastMove.to,
+        dxPercent,
+        dyPercent,
+        active: false,
+      });
+
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setSlideOffset((prev) => (prev ? { ...prev, dxPercent: 0, dyPercent: 0, active: true } : null));
+        });
+      });
+
+      const timer = setTimeout(() => {
+        setSlideOffset(null);
+      }, 210);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(timer);
+      };
+    }
+  }, [lastMove, fen, flipped]);
+
+  // Limpa seleção ao trocar de FEN
+  useEffect(() => {
+    setSelectedSquare(null);
+    setPendingPromotion(null);
+  }, [fen]);
 
   // Setas e destaques desenhados pelo próprio usuário com o botão direito
   const [userArrows, setUserArrows] = useState<BoardArrow[]>([]);
@@ -143,7 +221,6 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
     [flipped, notationMode]
   );
 
-  // Calcula em qual casa do tabuleiro está uma coordenada (clientX, clientY)
   const getSquareFromClientXY = (clientX: number, clientY: number): string | null => {
     if (!boardRef.current) return null;
     const rect = boardRef.current.getBoundingClientRect();
@@ -159,6 +236,29 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
     return `${FILES[fileIdx]}${RANKS[rankIdx]}`;
   };
 
+  const attemptMoveWithPromotionCheck = (fromSq: string, toSq: string) => {
+    if (!onUserMove) return false;
+    const matchingMoves = legalMovesFromSelected.filter((m) => m.from === fromSq && m.to === toSq);
+    if (matchingMoves.length === 0) return false;
+
+    const isPromotion = matchingMoves.some((m) => Boolean(m.promotion) || m.flags.includes('p'));
+    if (isPromotion) {
+      setPendingPromotion({
+        from: fromSq,
+        to: toSq,
+        color: chess.turn(),
+      });
+      setSelectedSquare(null);
+      return true;
+    }
+
+    const moved = onUserMove(fromSq, toSq, 'q');
+    if (moved) {
+      setSelectedSquare(null);
+    }
+    return moved;
+  };
+
   const handleMouseDownSquare = (e: React.MouseEvent, square: string) => {
     if (e.button === 2) {
       e.preventDefault();
@@ -168,20 +268,22 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
 
     if (e.button !== 0) return;
 
-    // Limpa setas manuais ao clicar com botão esquerdo
     if (userArrows.length > 0 || userHighlights.length > 0) {
       setUserArrows([]);
       setUserHighlights([]);
     }
 
+    if (pendingPromotion) {
+      setPendingPromotion(null);
+    }
+
     if (!interactive) return;
 
-    // Se já havia uma casa selecionada e o usuário clicou em um lance legal, executa Click-to-Move
+    // Click-to-Move se já houver peça selecionada e o usuário clicar em uma casa de destino legal
     if (selectedSquare && selectedSquare !== square) {
       const isLegal = legalMovesFromSelected.some((m) => m.to === square);
-      if (isLegal && onUserMove) {
-        onUserMove(selectedSquare, square, 'q');
-        setSelectedSquare(null);
+      if (isLegal) {
+        attemptMoveWithPromotionCheck(selectedSquare, square);
         return;
       }
     }
@@ -211,20 +313,22 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
     if (e.button === 2 && rightClickStart) {
       e.preventDefault();
       const targetSq = getSquareFromClientXY(e.clientX, e.clientY);
+      const drawColor = getModifierDrawColor(e);
       if (targetSq) {
         if (targetSq === rightClickStart) {
-          // Alterna highlight na casa
           setUserHighlights((prev) =>
-            prev.some((h) => h.square === targetSq)
-              ? prev.filter((h) => h.square !== targetSq)
-              : [...prev, { square: targetSq, color: 'emerald' }]
+            prev.some((h) => h.square === targetSq && h.color === drawColor)
+              ? prev.filter((h) => !(h.square === targetSq && h.color === drawColor))
+              : [...prev.filter((h) => h.square !== targetSq), { square: targetSq, color: drawColor }]
           );
         } else {
-          // Alterna seta entre as duas casas
           setUserArrows((prev) =>
-            prev.some((a) => a.from === rightClickStart && a.to === targetSq)
+            prev.some((a) => a.from === rightClickStart && a.to === targetSq && a.color === drawColor)
               ? prev.filter((a) => !(a.from === rightClickStart && a.to === targetSq))
-              : [...prev, { from: rightClickStart, to: targetSq, color: 'emerald' }]
+              : [
+                  ...prev.filter((a) => !(a.from === rightClickStart && a.to === targetSq)),
+                  { from: rightClickStart, to: targetSq, color: drawColor },
+                ]
           );
         }
       }
@@ -234,11 +338,8 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
 
     if (draggingFrom) {
       const targetSq = getSquareFromClientXY(e.clientX, e.clientY);
-      if (targetSq && targetSq !== draggingFrom && onUserMove) {
-        const moved = onUserMove(draggingFrom, targetSq, 'q');
-        if (moved) {
-          setSelectedSquare(null);
-        }
+      if (targetSq && targetSq !== draggingFrom) {
+        attemptMoveWithPromotionCheck(draggingFrom, targetSq);
       }
       setDraggingFrom(null);
       setDragPos(null);
@@ -251,7 +352,6 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
     return chess.get(draggingFrom as any) || null;
   }, [chess, draggingFrom]);
 
-  // Encontra casa do Rei em xeque para destacar em vermelho
   const kingInCheckSquare = useMemo(() => {
     if (!chess.inCheck()) return null;
     const turnColor = chess.turn();
@@ -276,9 +376,11 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
   const displayRows = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
   const displayCols = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
 
+  const promoCoords = pendingPromotion ? squareToCoords(pendingPromotion.to, flipped) : null;
+
   return (
     <div
-      className="relative p-1.5 rounded-[1.35rem] bg-white/[0.04] border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.65)] select-none"
+      className="relative p-2.5 sm:p-3.5 rounded-[20px] bg-white shadow-[0_10px_28px_rgba(181,138,101,0.14)] border border-[#E6DEC8] select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       <div
@@ -290,7 +392,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
           setDragPos(null);
           setHoveredSquare(null);
         }}
-        className="relative aspect-square w-full overflow-hidden rounded-[1rem] shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+        className="relative aspect-square w-full overflow-hidden rounded-[14px] shadow-[inset_0_2px_6px_rgba(0,0,0,0.18)]"
         style={{ backgroundColor: theme.border }}
       >
         <div className="grid grid-cols-8 grid-rows-8 w-full h-full">
@@ -300,8 +402,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
               const isLight = (rIdx + cIdx) % 2 === 0;
               const piece = boardMatrix[rIdx][cIdx];
 
-              const isLastMove =
-                lastMove?.from === square || lastMove?.to === square;
+              const isLastMove = lastMove?.from === square || lastMove?.to === square;
               const isSelected = selectedSquare === square;
               const isHoveredTarget = hoveredSquare === square && draggingFrom !== square;
               const isKingCheck = kingInCheckSquare === square;
@@ -318,8 +419,8 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
               const showFileLabel = visualRow === 7;
               const coordColor = isLight ? theme.dark : theme.light;
 
-              const isDestinationBadgeSquare =
-                moveBadge && lastMove?.to === square;
+              const isDestinationBadgeSquare = moveBadge && lastMove?.to === square;
+              const isSlidingSquare = slideOffset && slideOffset.square === square;
 
               return (
                 <div
@@ -336,44 +437,44 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                 >
                   {/* Casa selecionada */}
                   {isSelected && (
-                    <div className="absolute inset-0 bg-emerald-500/40 pointer-events-none" />
+                    <div className="absolute inset-0 bg-[#16865E]/35 ring-2 ring-inset ring-[#16865E] pointer-events-none" />
                   )}
 
-                  {/* Highlight customizado do livro ou do estudante */}
+                  {/* Highlight customizado do livro ou do usuário */}
                   {customHighlight && (
                     <div
                       className={`absolute inset-0 pointer-events-none ${
                         customHighlight.color === 'emerald'
-                          ? 'bg-emerald-500/45 ring-2 ring-inset ring-emerald-300/60'
+                          ? 'bg-emerald-500/45 ring-2 ring-inset ring-emerald-300/70'
                           : customHighlight.color === 'rose'
-                          ? 'bg-rose-500/45 ring-2 ring-inset ring-rose-300/60'
+                          ? 'bg-rose-500/45 ring-2 ring-inset ring-rose-300/70'
                           : customHighlight.color === 'amber'
-                          ? 'bg-amber-400/45 ring-2 ring-inset ring-amber-200/60'
-                          : 'bg-sky-500/45 ring-2 ring-inset ring-sky-300/60'
+                          ? 'bg-amber-400/50 ring-2 ring-inset ring-amber-200/75'
+                          : 'bg-sky-500/45 ring-2 ring-inset ring-sky-300/70'
                       }`}
                     />
                   )}
 
-                  {/* Rei em Xeque (Gradiente radial vermelho estilo Lichess) */}
+                  {/* Rei em Xeque */}
                   {isKingCheck && (
                     <div
                       className="absolute inset-0 pointer-events-none"
                       style={{
                         background:
-                          'radial-gradient(circle, rgba(239,68,68,0.88) 0%, rgba(220,38,38,0.55) 55%, transparent 85%)',
+                          'radial-gradient(circle, rgba(239,68,68,0.9) 0%, rgba(220,38,38,0.58) 55%, transparent 85%)',
                       }}
                     />
                   )}
 
                   {/* Anel de hover durante arraste */}
                   {isHoveredTarget && (
-                    <div className="absolute inset-0 ring-4 ring-inset ring-white/70 pointer-events-none z-10" />
+                    <div className="absolute inset-0 ring-4 ring-inset ring-white/85 pointer-events-none z-10" />
                   )}
 
                   {/* Coordenada de Fileira (Esquerda superior) */}
                   {showRankLabel && (
                     <span
-                      className="absolute top-1 left-1.5 text-[10px] font-bold font-mono leading-none pointer-events-none opacity-85"
+                      className="absolute top-1 left-1.5 text-[11px] font-extrabold leading-none pointer-events-none opacity-90"
                       style={{ color: coordColor }}
                     >
                       {coords.ranks[visualRow]}
@@ -383,27 +484,46 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                   {/* Coordenada de Coluna (Direita inferior) */}
                   {showFileLabel && (
                     <span
-                      className="absolute bottom-1 right-1.5 text-[10px] font-bold font-mono leading-none pointer-events-none opacity-85"
+                      className="absolute bottom-1 right-1.5 text-[11px] font-extrabold leading-none pointer-events-none opacity-90"
                       style={{ color: coordColor }}
                     >
                       {coords.files[visualCol]}
                     </span>
                   )}
 
-                  {/* Peça */}
-                  {piece && draggingFrom !== square && (
-                    <div className="w-[84%] h-[84%] z-10 transition-transform duration-150">
+                  {/* Peça Fantasma na Casa de Origem durante Drag */}
+                  {piece && draggingFrom === square && (
+                    <div className="w-[84%] h-[84%] z-10 opacity-30 pointer-events-none">
                       <ChessPieceSvg color={piece.color} type={piece.type} />
                     </div>
                   )}
 
-                  {/* Indicador de Lance Legal (Bolinha Lichess / Anel de Captura) */}
+                  {/* Peça com suporte a animação de deslize suave estilo Chess.com */}
+                  {piece && draggingFrom !== square && (
+                    <div
+                      className="w-[85%] h-[85%] z-10 pointer-events-none"
+                      style={
+                        isSlidingSquare
+                          ? {
+                              transform: `translate(${slideOffset.dxPercent}%, ${slideOffset.dyPercent}%)`,
+                              transition: slideOffset.active
+                                ? 'transform 185ms cubic-bezier(0.22, 1, 0.36, 1)'
+                                : 'none',
+                            }
+                          : undefined
+                      }
+                    >
+                      <ChessPieceSvg color={piece.color} type={piece.type} />
+                    </div>
+                  )}
+
+                  {/* Indicador de Lance Legal estilo Chess.com / Stitch */}
                   {legalTarget && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                       {piece || legalTarget.flags.includes('e') ? (
-                        <div className="w-full h-full rounded-full border-[5px] border-black/25 dark:border-emerald-950/45" />
+                        <div className="w-[90%] h-[90%] rounded-full border-[5px] border-[#16865E]/55 shadow-sm" />
                       ) : (
-                        <div className="w-3.5 h-3.5 rounded-full bg-black/25" />
+                        <div className="w-4 h-4 rounded-full bg-[#16865E]/40 shadow-inner" />
                       )}
                     </div>
                   )}
@@ -411,7 +531,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                   {/* Selo de Avaliação na Casa de Destino (!!, !, !?, ?!, ?, ??) */}
                   {isDestinationBadgeSquare && moveBadge && (
                     <div
-                      className="absolute -top-1 -right-1 z-30 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-lg ring-2 ring-black/40 animate-bounce"
+                      className="absolute -top-1 -right-1 z-30 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md ring-2 ring-white animate-bounce"
                       style={{
                         backgroundColor: getBadgeStyle(moveBadge).bg,
                         color: getBadgeStyle(moveBadge).text,
@@ -426,6 +546,47 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
             })
           )}
         </div>
+
+        {/* Seletor Flutuante de Promoção de Peão (Estilo Chess.com) */}
+        {pendingPromotion && promoCoords && (
+          <div
+            className="absolute z-50 bg-white rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.38)] border-2 border-[#16865E] overflow-hidden flex flex-col"
+            style={{
+              width: '12.5%',
+              left: `${promoCoords.col * 12.5}%`,
+              top: promoCoords.row === 0 ? '0%' : '50%',
+              height: '50%',
+            }}
+          >
+            {(['q', 'n', 'r', 'b'] as const).map((promoPiece) => (
+              <button
+                key={promoPiece}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onUserMove) {
+                    onUserMove(pendingPromotion.from, pendingPromotion.to, promoPiece);
+                  }
+                  setPendingPromotion(null);
+                }}
+                className="flex-1 flex items-center justify-center p-1 hover:bg-[#E2F6EA] transition-colors cursor-pointer"
+                title={
+                  promoPiece === 'q'
+                    ? 'Promover para Dama'
+                    : promoPiece === 'n'
+                    ? 'Promover para Cavalo'
+                    : promoPiece === 'r'
+                    ? 'Promover para Torre'
+                    : 'Promover para Bispo'
+                }
+              >
+                <div className="w-[82%] h-[82%]">
+                  <ChessPieceSvg color={pendingPromotion.color} type={promoPiece} />
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Camada Vetorial de Setas (Livro + Usuário + Stockfish) */}
         {allArrows.length > 0 && (
@@ -442,7 +603,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                 refY="2.1"
                 orient="auto"
               >
-                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(16, 185, 129, 0.88)" />
+                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(22, 134, 94, 0.92)" />
               </marker>
               <marker
                 id="arrow-rose"
@@ -452,7 +613,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                 refY="2.1"
                 orient="auto"
               >
-                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(244, 63, 94, 0.88)" />
+                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(244, 63, 94, 0.92)" />
               </marker>
               <marker
                 id="arrow-amber"
@@ -462,7 +623,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                 refY="2.1"
                 orient="auto"
               >
-                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(245, 158, 11, 0.88)" />
+                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(245, 158, 11, 0.92)" />
               </marker>
               <marker
                 id="arrow-sky"
@@ -472,7 +633,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
                 refY="2.1"
                 orient="auto"
               >
-                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(14, 165, 233, 0.9)" />
+                <polygon points="0 0, 4.2 2.1, 0 4.2" fill="rgba(59, 130, 246, 0.92)" />
               </marker>
             </defs>
 
@@ -484,7 +645,6 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
               const x2 = end.col * 100 + 50;
               const y2 = end.row * 100 + 50;
 
-              // Encurta ligeiramente a ponta para centralizar na casa
               const dx = x2 - x1;
               const dy = y2 - y1;
               const len = Math.hypot(dx, dy) || 1;
@@ -493,10 +653,10 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
 
               const colorKey = arrow.color || 'emerald';
               const strokeMap: Record<string, string> = {
-                emerald: 'rgba(16, 185, 129, 0.85)',
-                rose: 'rgba(244, 63, 94, 0.85)',
-                amber: 'rgba(245, 158, 11, 0.85)',
-                sky: 'rgba(14, 165, 233, 0.88)',
+                emerald: 'rgba(22, 134, 94, 0.86)',
+                rose: 'rgba(244, 63, 94, 0.86)',
+                amber: 'rgba(245, 158, 11, 0.88)',
+                sky: 'rgba(59, 130, 246, 0.88)',
               };
 
               return (
@@ -519,7 +679,7 @@ export const InteractiveChessboard: React.FC<InteractiveChessboardProps> = ({
         {/* Peça Flutuante durante Drag-and-Drop */}
         {draggingFrom && draggedPiece && dragPos && (
           <div
-            className="absolute pointer-events-none z-40 w-[13.5%] h-[13.5%] -translate-x-1/2 -translate-y-1/2 scale-110 drop-shadow-[0_14px_20px_rgba(0,0,0,0.65)]"
+            className="absolute pointer-events-none z-40 w-[13.5%] h-[13.5%] -translate-x-1/2 -translate-y-1/2 scale-110 drop-shadow-[0_14px_20px_rgba(0,0,0,0.45)]"
             style={{
               left: `${dragPos.x}px`,
               top: `${dragPos.y}px`,

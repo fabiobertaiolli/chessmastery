@@ -448,6 +448,14 @@
       return this.moves().length === 0;
     }
 
+    in_check() {
+      return this.inCheck(this.turnColor);
+    }
+
+    in_checkmate() {
+      return this.isCheckmate();
+    }
+
     isDraw() {
       if (this.inCheck(this.turnColor)) return false;
       return this.moves().length === 0;
@@ -462,11 +470,47 @@
       let chosen = null;
 
       if (typeof input === 'string') {
-        const clean = input.trim().replace(/[!?]+$/g, '').replace(/0-0-0/g, 'O-O-O').replace(/0-0/g, 'O-O');
+        let clean = input.trim().replace(/[!?]+$/g, '').replace(/0-0-0/g, 'O-O-O').replace(/0-0/g, 'O-O');
+        // Normalize Portuguese piece letters (C, B, T, D, R) if not matching English directly
+        const ptToEn = { C: 'N', B: 'B', T: 'R', D: 'Q', R: 'K' };
         const noCheck = clean.replace(/[+#]+$/g, '');
         chosen =
           legal.find((m) => m.san === clean) ||
           legal.find((m) => m.san.replace(/[+#]+$/g, '') === noCheck);
+
+        if (!chosen) {
+          // Try redundant disambiguation or Portuguese piece letter: e.g. Rfe1, Tfe1, Nbd7, Cbd2
+          const mMatch = noCheck.match(/^([KQRBNCBTD])([a-h1-8]{0,2})x?([a-h][1-8])(?:=([QRBNDTBC]))?$/);
+          if (mMatch) {
+            const rawPiece = mMatch[1];
+            const dis = mMatch[2] || '';
+            const targetSq = mMatch[3];
+            const rawPromo = mMatch[4];
+            const pieceCandidates = [];
+            if ('KQRBN'.includes(rawPiece)) pieceCandidates.push(rawPiece.toLowerCase());
+            if (ptToEn[rawPiece]) {
+              const pEn = ptToEn[rawPiece].toLowerCase();
+              if (!pieceCandidates.includes(pEn)) pieceCandidates.push(pEn);
+            }
+            for (const pType of pieceCandidates) {
+              chosen = legal.find((m) => {
+                if (m.piece !== pType || m.to !== targetSq) return false;
+                if (dis) {
+                  for (const ch of dis) {
+                    if (ch >= 'a' && ch <= 'h' && m.from[0] !== ch) return false;
+                    if (ch >= '1' && ch <= '8' && m.from[1] !== ch) return false;
+                  }
+                }
+                if (rawPromo) {
+                  const promoEn = (ptToEn[rawPromo] || rawPromo).toLowerCase();
+                  if (m.promotion !== promoEn) return false;
+                }
+                return true;
+              });
+              if (chosen) break;
+            }
+          }
+        }
       } else if (input && typeof input === 'object') {
         chosen = legal.find(
           (m) =>
@@ -574,6 +618,7 @@
     };
   }
 
+  window.Chess = ChessEngine;
   window.ChessMasteryEngine = {
     Chess: ChessEngine,
     moveToDescriptive,
@@ -581,5 +626,6 @@
     sanToFigurine,
     formatMoveByMode,
     getBoardCoordinates,
+    splitMoveAnnotations,
   };
 })();

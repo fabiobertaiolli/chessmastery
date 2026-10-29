@@ -3,33 +3,65 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
+    --canvas-cream: #FFF9ED;
+    --surface-card: #FFFFFF;
+    --surface-warm: #FBF8F1;
+    --primary: #006b49;
+    --primary-container: #16865e;
+    --mint-soft: #E2F6EA;
+    --amber-soft: #FEF3C7;
+    --amber-vibrant: #F59E0B;
+    --sky-soft: #EFF6FF;
+    --sky-vibrant: #3B82F6;
+    --coral-soft: #FEE2E2;
+    --coral-vibrant: #F87171;
+    --on-surface: #0d1c2e;
+    --on-surface-variant: #3e4942;
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", sans-serif;
-    background-color: #0b0d11;
-    color: #f4f4f5;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    background-color: #FFF9ED;
+    color: #0d1c2e;
     user-select: none;
     -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
   }
 }
 
-/* Scrollbars elegantes e discretas estilo Lichess Dark */
+/* Scrollbars suaves e acolhedoras no estilo Playful Chess Studio */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(181, 138, 101, 0.08);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(22, 134, 94, 0.28);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.26);
+  background: rgba(22, 134, 94, 0.48);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 180ms ease-out forwards;
 }

@@ -1,6 +1,7 @@
 import type { ChessBook } from '@/types/chess';
+import { EXTRA_CHAPTERS_BY_BOOK } from './completeBookChapters';
 
-export const PREINSTALLED_BOOKS: ChessBook[] = [
+const BASE_PREINSTALLED_BOOKS: ChessBook[] = [
   // ============================================================================
   // LIVRO 1: XADREZ BÁSICO — ORFEU GILBERTO D'AGOSTINI
   // ============================================================================
@@ -1232,3 +1233,75 @@ export const PREINSTALLED_BOOKS: ChessBook[] = [
     ],
   },
 ];
+
+function toPtSanSimple(san: string): string {
+  if (!san) return '';
+  const map: Record<string, string> = { K: 'R', Q: 'D', R: 'T', B: 'B', N: 'C' };
+  return san.replace(/^[KQRBN]/, (m) => map[m] || m);
+}
+
+function buildMoveRunText(movesSan: string[], startIdx: number, endIdx: number): string {
+  const parts: string[] = [];
+  for (let i = startIdx; i < Math.min(endIdx, movesSan.length); i++) {
+    const moveNum = Math.floor(i / 2) + 1;
+    const sanPt = toPtSanSimple(movesSan[i]);
+    if (i % 2 === 0) {
+      parts.push(`${moveNum}. ${sanPt}`);
+    } else if (i === startIdx) {
+      parts.push(`${moveNum}... ${sanPt}`);
+    } else {
+      parts.push(sanPt);
+    }
+  }
+  return parts.join(' ');
+}
+
+export const PREINSTALLED_BOOKS: ChessBook[] = BASE_PREINSTALLED_BOOKS.map((book) => {
+  const extras = EXTRA_CHAPTERS_BY_BOOK[book.id] || [];
+  const combinedChapters = [...book.chapters, ...extras].map((ch, idx) => ({
+    ...ch,
+    number: idx + 1,
+    games: ch.games.map((g) => {
+      if (g.readingSectionsPt && g.readingSectionsPt.length > 0) return g;
+      const moves = g.movesSan || [];
+      const anns = g.annotations || {};
+      const annKeys = Object.keys(anns).map(Number).sort((a, b) => a - b);
+      const midPly = Math.min(20, Math.floor(moves.length / 2));
+      const firstRun = buildMoveRunText(moves, 0, Math.max(6, midPly));
+      const secondRun = buildMoveRunText(moves, Math.max(6, midPly), moves.length);
+      const annFirst = annKeys
+        .filter((p) => p <= midPly)
+        .map((p) => anns[p]?.commentPt || '')
+        .filter(Boolean);
+      const annSecond = annKeys
+        .filter((p) => p > midPly)
+        .map((p) => anns[p]?.commentPt || '')
+        .filter(Boolean);
+      const readingSectionsPt = [
+        {
+          headingPt: `1. Contexto da Partida e Abertura (${g.openingNamePt || ch.titlePt})`,
+          bodyPt: `${g.introPt ? g.introPt + ' ' : ''}Acompanhe no texto e clique em qualquer lance para ver a posição no tabuleiro: ${firstRun}. ${annFirst.slice(0, 2).join(' ')}`,
+          focusPly: Math.min(8, moves.length),
+        },
+        ...(secondRun
+          ? [
+              {
+                headingPt: '2. O Momento Crítico, Meio-Jogo e Desfecho Tático',
+                bodyPt: `Na fase decisiva da partida, a sequência segue com ${secondRun}. ${annSecond.slice(0, 3).join(' ')}`,
+                focusPly: Math.min(Math.max(10, midPly + 2), moves.length),
+              },
+            ]
+          : []),
+      ];
+      return {
+        ...g,
+        readingSectionsPt,
+      };
+    }),
+  }));
+  return {
+    ...book,
+    chapters: combinedChapters,
+  };
+});
+

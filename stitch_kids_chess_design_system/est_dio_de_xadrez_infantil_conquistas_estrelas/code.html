@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"secondary-container":"#fea619","primary":"#006b49","secondary":"#855300","sky-soft":"#EFF6FF","inverse-on-surface":"#eaf1ff","on-tertiary-fixed-variant":"#004395","secondary-fixed-dim":"#ffb95f","surface-container":"#e6eeff","on-secondary":"#ffffff","surface-container-lowest":"#ffffff","canvas-cream":"#FFF9ED","on-tertiary-fixed":"#001a42","on-tertiary":"#ffffff","surface-container-highest":"#d5e3fc","primary-fixed":"#93f6c6","on-primary-container":"#fefffb","board-dark":"#B58A65","on-tertiary-container":"#ffffff","on-error-container":"#93000a","on-secondary-fixed-variant":"#653e00","on-surface-variant":"#3e4942","surface-card":"#FFFFFF","outline":"#6e7a72","on-secondary-container":"#684000","amber-soft":"#FEF3C7","board-light":"#F5E6CE","tertiary-fixed-dim":"#adc6ff","secondary-fixed":"#ffddb8","on-primary-fixed":"#002114","tertiary-fixed":"#d8e2ff","error-container":"#ffdad6","coral-vibrant":"#F87171","primary-container":"#16865e","on-secondary-fixed":"#2a1700","sky-vibrant":"#3B82F6","surface-container-low":"#eff4ff","on-primary":"#ffffff","mint-vibrant":"#16865E","amber-vibrant":"#F59E0B","surface-tint":"#006c4a","tertiary-container":"#2372e5","on-primary-fixed-variant":"#005237","error":"#ba1a1a","surface":"#f8f9ff","background":"#f8f9ff","outline-variant":"#bdcac0","surface-warm":"#FBF8F1","surface-variant":"#d5e3fc","inverse-primary":"#77d9ab","primary-fixed-dim":"#77d9ab","tertiary":"#0059c0","surface-bright":"#f8f9ff","surface-dim":"#ccdbf3","mint-soft":"#E2F6EA","on-surface":"#0d1c2e","coral-soft":"#FEE2E2","on-error":"#ffffff","on-background":"#0d1c2e","surface-container-high":"#dce9ff","inverse-surface":"#233144"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"1.25rem","space-sm":"0.75rem","margin":"1.5rem","space-lg":"1.75rem","space-xs":"0.375rem","space-xl":"2.5rem","gutter":"1.25rem"},"fontFamily":{"headline-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"chess-move-num":["Plus Jakarta Sans"],"display-hero":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"display-hero-mobile":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"label-badge":["Plus Jakarta Sans"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"chess-move-num":["22px",{"lineHeight":"28px","letterSpacing":"0.02em","fontWeight":"800"}],"display-hero":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-lg":["15px",{"lineHeight":"20px","fontWeight":"700"}],"body-md":["15px",{"lineHeight":"22px","fontWeight":"400"}],"display-hero-mobile":["26px",{"lineHeight":"34px","letterSpacing":"-0.01em","fontWeight":"800"}],"body-lg":["17px",{"lineHeight":"26px","fontWeight":"500"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-md":["20px",{"lineHeight":"28px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"18px","fontWeight":"600"}],"label-badge":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}}</script></head><body class="bg-canvas-cream font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-canvas-cream/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(181,138,101,0.08)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-11 h-11 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_4px_12px_rgba(22,134,94,0.2)]"><span class="material-symbols-outlined text-[24px]">chess_knight</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">Chess Mastery Kids</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-badge text-label-badge text-on-surface-variant uppercase">Estúdio Lúdico</span></div></div></div><nav class="hidden lg:flex items-center bg-surface-card/80 p-1.5 rounded-xl shadow-[0_2px_10px_rgba(181,138,101,0.06)]" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm shadow-sm"><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="aprender" href="#">Aprender</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="biblioteca-magica" href="#">Biblioteca Mágica</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="aberturas-e-desafios" href="#">Aberturas &amp; Desafios</a><a class="px-space-md py-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-all" data-path="conquistas-e-estrelas" href="#">Conquistas &amp; Estrelas</a></nav><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1 px-space-sm py-1.5 bg-amber-soft text-on-secondary-container rounded-full font-label-badge text-label-badge shadow-[0_2px_8px_rgba(245,158,11,0.15)]"><span class="material-symbols-outlined text-[16px] text-amber-vibrant">star</span><span>42 ⭐</span></div><button aria-label="Buscar" class="w-9 h-9 rounded-full bg-surface-card text-on-surface-variant flex items-center justify-center hover:bg-surface-container-low hover:text-on-surface transition-all shadow-[0_2px_8px_rgba(181,138,101,0.06)]" type="button"><span class="material-symbols-outlined text-[20px]">search</span></button><button aria-label="Som do Jogo" class="w-9 h-9 rounded-full bg-surface-card text-on-surface-variant flex items-center justify-center hover:bg-surface-container-low hover:text-on-surface transition-all shadow-[0_2px_8px_rgba(181,138,101,0.06)]" type="button"><span class="material-symbols-outlined text-[20px]">volume_up</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 bg-canvas-cream min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Script for Filtering & Micro-interactions -->
+<script>
+    function filterBadges(category, btnElement) {
+      const cards = document.querySelectorAll('[data-badge-category]');
+      const buttons = document.querySelectorAll('.filter-pill-btn');
+      
+      buttons.forEach(b => {
+        b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-md');
+        b.classList.add('bg-surface-card', 'text-on-surface-variant');
+      });
+      btnElement.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-md');
+      btnElement.classList.remove('bg-surface-card', 'text-on-surface-variant');
+
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-badge-category') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function toggleShareModal() {
+      const banner = document.getElementById('trophy-share-toast');
+      if (banner) {
+        banner.classList.toggle('hidden');
+        setTimeout(() => {
+          if (!banner.classList.contains('hidden')) {
+            banner.classList.add('hidden');
+          }
+        }, 3600);
+      }
+    }
+  </script>
+<!-- Ambient Decorative Background Element -->
+<div class="relative w-full max-w-7xl mx-auto px-margin pb-space-xl">
+<!-- Top Floating Toast Notification for Shared Trophy -->
+<div class="hidden fixed top-24 right-6 z-50 bg-surface-card px-space-md py-space-sm rounded-xl shadow-[0_16px_36px_rgba(245,158,11,0.25)] flex items-center gap-space-sm border-2 border-amber-soft transition-all duration-300" id="trophy-share-toast">
+<div class="w-9 h-9 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px]">celebration</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-on-surface">Diploma Mágico Preparado! 📜</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pronto para mostrar aos amigos e à família!</p>
+</div>
+</div>
+<!-- 1. Header & Gamified KPI Ribbon -->
+<section class="mt-space-lg mb-space-xl">
+<!-- Title & Hero Narrative -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md mb-space-lg">
+<div class="max-w-3xl">
+<div class="inline-flex items-center gap-space-xs px-space-sm py-1 bg-amber-soft text-on-secondary-container rounded-full font-label-badge text-label-badge uppercase tracking-wider mb-space-xs shadow-sm">
+<span class="material-symbols-outlined text-[15px] text-amber-vibrant">auto_awesome</span>
+<span>Seu Livro dos Campeões</span>
+</div>
+<h1 class="font-display-hero text-display-hero text-on-surface tracking-tight">
+            🏆 Galeria de Conquistas &amp; Sala dos Troféus
+          </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-space-xs">
+            Comemore cada passo da sua jornada! Veja suas estrelas mágicas, medalhas dos grandes mestres e insígnias conquistadas no tabuleiro.
+          </p>
+</div>
+<!-- Quick Mascots Encouragement Badge -->
+<div class="flex items-center -space-x-3 bg-surface-card p-space-xs rounded-full shadow-[0_4px_16px_rgba(181,138,101,0.08)] self-start md:self-auto">
+<div class="w-10 h-10 rounded-full bg-amber-soft flex items-center justify-center text-secondary text-lg font-bold shadow-sm" title="Coruja Sofia">
+            🦉
+          </div>
+<div class="w-10 h-10 rounded-full bg-mint-soft flex items-center justify-center text-primary text-lg font-bold shadow-sm" title="Livro Mágico">
+            📖
+          </div>
+<div class="w-10 h-10 rounded-full bg-sky-soft flex items-center justify-center text-tertiary text-lg font-bold shadow-sm" title="Robô Pipo">
+            🤖
+          </div>
+<div class="pl-space-sm pr-space-xs">
+<span class="font-label-badge text-label-badge text-on-surface-variant block">3 Mentores</span>
+<span class="font-label-md text-label-md text-mint-vibrant font-bold">Torcendo por você!</span>
+</div>
+</div>
+</div>
+<!-- 4 Tactile KPI Metric Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- KPI 1: Stars -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Estrelas Mágicas</span>
+<div class="font-chess-move-num text-chess-move-num text-on-surface mt-1 flex items-center gap-1">
+                42 <span class="text-amber-vibrant text-[24px]">⭐</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-amber-soft text-amber-vibrant flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[24px]">hotel_class</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1.5">
+<span>Rumo a Mestre Aprendiz</span>
+<span class="font-bold text-secondary">42 / 60</span>
+</div>
+<div class="w-full h-3 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-secondary-container transition-all duration-700" style="width: 70%;"></div>
+</div>
+</div>
+</div>
+<!-- KPI 2: Badges -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Medalhas Ativas</span>
+<div class="font-chess-move-num text-chess-move-num text-on-surface mt-1 flex items-center gap-1">
+                14 / 28 <span class="text-secondary text-[22px]">🏅</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-mint-soft text-mint-vibrant flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[24px]">military_tech</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1.5">
+<span>Metade do Quadro Completa!</span>
+<span class="font-bold text-mint-vibrant">50%</span>
+</div>
+<div class="w-full h-3 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-primary-container transition-all duration-700" style="width: 50%;"></div>
+</div>
+</div>
+</div>
+<!-- KPI 3: Level & XP -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Classificação Real</span>
+<div class="font-headline-sm text-headline-sm text-primary mt-1 flex items-center gap-1">
+                Nível 3: Peão Explorador ♟️
+              </div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-surface-container text-tertiary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[24px]">shield_person</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1.5">
+<span>Próximo: Cavalo Alado ♞</span>
+<span class="font-bold text-tertiary">380 / 500 XP</span>
+</div>
+<div class="w-full h-3 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-tertiary-container transition-all duration-700" style="width: 76%;"></div>
+</div>
+</div>
+</div>
+<!-- KPI 4: Streak Flame -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:shadow-md transition-all">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant">Ofensiva Mágica</span>
+<div class="font-chess-move-num text-chess-move-num text-on-surface mt-1 flex items-center gap-1">
+                5 Dias <span class="text-coral-vibrant text-[24px]">🔥</span>
+</div>
+</div>
+<div class="w-11 h-11 rounded-xl bg-coral-soft text-coral-vibrant flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[24px]">local_fire_department</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center gap-1.5">
+<span class="w-6 h-6 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold text-xs">S</span>
+<span class="w-6 h-6 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold text-xs">T</span>
+<span class="w-6 h-6 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold text-xs">Q</span>
+<span class="w-6 h-6 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold text-xs">Q</span>
+<span class="w-6 h-6 rounded-full bg-amber-soft text-amber-vibrant flex items-center justify-center font-bold text-xs">S</span>
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold text-xs">S</span>
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold text-xs">D</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Spotlight: Recent Major Trophy Unlock -->
+<section class="mb-space-xl">
+<div class="relative overflow-hidden bg-gradient-to-br from-surface-card via-amber-soft/30 to-mint-soft/40 p-space-lg sm:p-space-xl rounded-xl shadow-[0_8px_24px_rgba(22,134,94,0.12)]">
+<!-- Decorative Glow Blur Circles -->
+<div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-vibrant/10 blur-3xl pointer-events-none"></div>
+<div class="absolute -left-12 -bottom-12 w-56 h-56 rounded-full bg-mint-vibrant/10 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-space-lg">
+<!-- Trophy Badge Graphic + Details -->
+<div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-space-lg">
+<div class="relative flex-shrink-0">
+<div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-tr from-secondary-container to-amber-soft p-1.5 shadow-[0_8px_24px_rgba(245,158,11,0.25)] flex items-center justify-center">
+<div class="w-full h-full bg-surface-card rounded-xl flex flex-col items-center justify-center">
+<span class="text-4xl sm:text-5xl">🏰</span>
+<div class="flex items-center gap-0.5 mt-1 text-amber-vibrant">
+<span class="material-symbols-outlined text-[16px]">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+<span class="material-symbols-outlined text-[16px]">star</span>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary-container text-on-primary-container font-label-badge text-label-badge px-2 py-0.5 rounded-full shadow-md">
+                NOVO!
+              </div>
+</div>
+<div class="flex flex-col justify-center max-w-xl">
+<div class="inline-flex items-center gap-1.5 px-space-xs py-0.5 bg-mint-soft text-mint-vibrant rounded-md font-label-badge text-label-badge uppercase tracking-wider self-center sm:self-start mb-1">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span>Último Troféu Desbloqueado</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+                🌟 Guardião das Torres Abertas!
+              </h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1.5">
+                Conquistado na 1ª Partida Mágica de Capablanca ao dominar com maestria a coluna aberta e pressionar o campo adversário!
+              </p>
+<!-- Mentors Celebration Quote Box -->
+<div class="mt-space-md p-space-sm bg-surface-card/90 rounded-lg shadow-sm flex flex-col sm:flex-row items-center gap-space-sm">
+<div class="flex -space-x-2 flex-shrink-0">
+<span class="w-7 h-7 rounded-full bg-amber-soft flex items-center justify-center text-xs shadow">🦉</span>
+<span class="w-7 h-7 rounded-full bg-mint-soft flex items-center justify-center text-xs shadow">📖</span>
+<span class="w-7 h-7 rounded-full bg-sky-soft flex items-center justify-center text-xs shadow">🤖</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface italic text-center sm:text-left">
+                  "Uau! A Torre cantou vitória! Você moveu a peça com a paciência dos grandes campeões!" — <strong>Coruja Sofia &amp; Robô Pipo</strong>
+</p>
+</div>
+</div>
+</div>
+<!-- Action Buttons Tactile Dock -->
+<div class="flex flex-row sm:flex-col w-full sm:w-auto gap-space-sm flex-shrink-0">
+<button class="flex-1 sm:flex-none h-12 px-space-md rounded-xl bg-primary-container text-on-primary-container font-label-lg text-label-lg shadow-[0_8px_24px_rgba(22,134,94,0.18)] hover:bg-primary transition-all active:scale-95 flex items-center justify-center gap-2" onclick="toggleShareModal()" type="button">
+<span class="material-symbols-outlined text-[20px]">share</span>
+<span>Compartilhar Troféu 📜</span>
+</button>
+<a class="flex-1 sm:flex-none h-12 px-space-md rounded-xl bg-surface-card text-on-surface-variant font-label-lg text-label-lg shadow-sm hover:bg-surface-container-low hover:text-on-surface transition-all flex items-center justify-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span>Ver no Tabuleiro ♟️</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Category Filter Selector Pills -->
+<section class="mb-space-lg">
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md mb-space-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Minhas Medalhas &amp; Insígnias</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Filtre seus desafios conquistados ou em andamento</p>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-badge text-label-badge bg-surface-card px-space-sm py-1.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-mint-vibrant">check_circle</span>
+<span>14 completadas • 3 em progresso • 11 bloqueadas</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs overflow-x-auto pb-space-xs scrollbar-none">
+<button class="filter-pill-btn px-space-md py-space-xs rounded-full font-label-lg text-label-lg bg-primary-container text-on-primary-container shadow-md transition-all whitespace-nowrap" onclick="filterBadges('all', this)" type="button">
+          Todas (28)
+        </button>
+<button class="filter-pill-btn px-space-md py-space-xs rounded-full font-label-lg text-label-lg bg-surface-card text-on-surface-variant hover:bg-surface-container-low transition-all shadow-sm whitespace-nowrap" onclick="filterBadges('books', this)" type="button">
+          ⭐ Mestres dos Livros (8)
+        </button>
+<button class="filter-pill-btn px-space-md py-space-xs rounded-full font-label-lg text-label-lg bg-surface-card text-on-surface-variant hover:bg-surface-container-low transition-all shadow-sm whitespace-nowrap" onclick="filterBadges('openings', this)" type="button">
+          🛡️ Guardião das Aberturas (10)
+        </button>
+<button class="filter-pill-btn px-space-md py-space-xs rounded-full font-label-lg text-label-lg bg-surface-card text-on-surface-variant hover:bg-surface-container-low transition-all shadow-sm whitespace-nowrap" onclick="filterBadges('tactics', this)" type="button">
+          ⚡ Táticas &amp; Truques (6)
+        </button>
+<button class="filter-pill-btn px-space-md py-space-xs rounded-full font-label-lg text-label-lg bg-surface-card text-on-surface-variant hover:bg-surface-container-low transition-all shadow-sm whitespace-nowrap" onclick="filterBadges('habits', this)" type="button">
+          🏅 Hábitos de Campeão (4)
+        </button>
+</div>
+</section>
+<!-- 4. Badges Grid: Unlocked, In-Progress, Locked -->
+<section class="mb-space-xl">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- UNLOCKED 1: Leitor de Capablanca -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="books">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-mint-soft text-mint-vibrant flex items-center justify-center text-2xl shadow-sm">
+                📖
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Leitor de Capablanca</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Completou os 3 primeiros estudos práticos do clássico Xadrez Básico de D'Agostini.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-secondary font-bold">Estágio 3/3</span>
+<div class="flex text-amber-vibrant text-xs">⭐⭐⭐</div>
+</div>
+</div>
+<!-- UNLOCKED 2: Primeiro Roque do Rei -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="openings">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-amber-soft text-secondary flex items-center justify-center text-2xl shadow-sm">
+                🏰
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Primeiro Roque do Rei</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Garantiu o castelo do rei protegido em 10 partidas sem sofrer ameaças iniciais.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-primary font-bold">10 de 10 Partidas</span>
+<span class="font-label-badge text-label-badge text-mint-vibrant font-bold">Concluído! 👑</span>
+</div>
+</div>
+<!-- UNLOCKED 3: Olho de Águia Tático -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="tactics">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-sky-soft text-tertiary flex items-center justify-center text-2xl shadow-sm">
+                🎯
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Olho de Águia Tático</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Encontrou 5 lances vencedores de primeira tentativa sem precisar pedir dica mágica.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-secondary font-bold">Precisão Perfeita</span>
+<span class="font-label-badge text-label-badge text-mint-vibrant font-bold">5 / 5 Acertos 🎯</span>
+</div>
+</div>
+<!-- UNLOCKED 4: Amigo da Coruja -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="habits">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-amber-soft text-secondary flex items-center justify-center text-2xl shadow-sm">
+                🦉
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Amigo da Coruja</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Praticou durante 3 dias consecutivos prestando atenção aos conselhos de voz da Sofia.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-primary font-bold">Vínculo com Mentor</span>
+<span class="font-label-badge text-label-badge text-mint-vibrant font-bold">Nível Máximo ⭐</span>
+</div>
+</div>
+<!-- UNLOCKED 5: A Dança Italiana -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="openings">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-coral-soft text-coral-vibrant flex items-center justify-center text-2xl shadow-sm">
+                ⚔️
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">A Dança Italiana</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Dominou perfeitamente os 5 lances iniciais da harmoniosa Abertura Italiana (e4, e5, Cf3, Cc6, Bc4).
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-secondary font-bold">5 de 5 Lances</span>
+<div class="flex text-amber-vibrant text-xs">⭐⭐⭐</div>
+</div>
+</div>
+<!-- UNLOCKED 6: Colecionador de Estrelas -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="habits">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-amber-soft text-amber-vibrant flex items-center justify-center text-2xl shadow-sm">
+                ✨
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-mint-soft text-mint-vibrant font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>Desbloqueada</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Colecionador de Estrelas</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Brilhou no estúdio acumulando mais de 40 estrelas mágicas em exercícios de treino.
+            </p>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between bg-surface-warm p-space-xs rounded-lg">
+<span class="font-label-badge text-label-badge text-secondary font-bold">Meta: 40 Estrelas</span>
+<span class="font-label-badge text-label-badge text-amber-vibrant font-bold">42 Estrelas! 🌟</span>
+</div>
+</div>
+<!-- IN PROGRESS 1: A Muralha Francesa -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="openings">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container text-tertiary flex items-center justify-center text-2xl shadow-sm">
+                🛡️
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-amber-soft text-on-secondary-container font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+<span>Em Andamento</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">A Muralha Francesa</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Vencer 3 desafios práticos jogando com a sólida Defesa Francesa.
+            </p>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1">
+<span>Progresso: 2 de 3</span>
+<span class="text-tertiary font-bold">Falta só 1 vitória!</span>
+</div>
+<div class="w-full h-2.5 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-tertiary-container transition-all" style="width: 66%;"></div>
+</div>
+</div>
+</div>
+<!-- IN PROGRESS 2: O Salto do Dragão -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="tactics">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-coral-soft text-coral-vibrant flex items-center justify-center text-2xl shadow-sm">
+                🐉
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-amber-soft text-on-secondary-container font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+<span>Em Andamento</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">O Salto do Dragão</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Aprender o fianchetto do Bispo e a variante do Dragão na audaciosa Siciliana.
+            </p>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1">
+<span>Progresso: 1 de 4 lances</span>
+<span class="text-secondary font-bold">25%</span>
+</div>
+<div class="w-full h-2.5 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-secondary-container transition-all" style="width: 25%;"></div>
+</div>
+</div>
+</div>
+<!-- IN PROGRESS 3: Explorador de Nimzowitsch -->
+<div class="bg-surface-card p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)] flex flex-col justify-between hover:-translate-y-1 transition-all" data-badge-category="books">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-sky-soft text-tertiary flex items-center justify-center text-2xl shadow-sm">
+                📘
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-amber-soft text-on-secondary-container font-label-badge text-label-badge flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+<span>Em Andamento</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Explorador de Nimzowitsch</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Completar o Capítulo 1 'O Centro e o Bloqueio' do clássico Meu Sistema.
+            </p>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1">
+<span>Leitura &amp; Tabuleiro</span>
+<span class="text-mint-vibrant font-bold">60%</span>
+</div>
+<div class="w-full h-2.5 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-primary-container transition-all" style="width: 60%;"></div>
+</div>
+</div>
+</div>
+<!-- LOCKED 1: Mago dos Sacrifícios (Tal) -->
+<div class="bg-surface-card/60 p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.04)] flex flex-col justify-between opacity-80 hover:opacity-100 transition-all" data-badge-category="books">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-outline flex items-center justify-center text-2xl">
+                ⚡
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-badge text-label-badge flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Bloqueado</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Mago dos Sacrifícios (Tal)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Desvendar o poder das combinações mágicas de peças de Mikhail Tal.
+            </p>
+</div>
+<div class="mt-space-md p-space-xs rounded-lg bg-surface-container-low flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">key</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Requer 15 estrelas na biblioteca</span>
+</div>
+</div>
+<!-- LOCKED 2: Gênio de Fischer -->
+<div class="bg-surface-card/60 p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.04)] flex flex-col justify-between opacity-80 hover:opacity-100 transition-all" data-badge-category="tactics">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-outline flex items-center justify-center text-2xl">
+                👑
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-badge text-label-badge flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Bloqueado</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Gênio de Fischer</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Derrotar a posição do desafio mestre da lendária 4ª obra clássica.
+            </p>
+</div>
+<div class="mt-space-md p-space-xs rounded-lg bg-surface-container-low flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">key</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Requer Nível 4: Cavalo Alado</span>
+</div>
+</div>
+<!-- LOCKED 3: Grande Mestre Mirim -->
+<div class="bg-surface-card/60 p-space-md rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.04)] flex flex-col justify-between opacity-80 hover:opacity-100 transition-all" data-badge-category="habits">
+<div>
+<div class="flex items-start justify-between gap-space-sm mb-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-outline flex items-center justify-center text-2xl">
+                🏆
+              </div>
+<div class="px-space-xs py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-badge text-label-badge flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Bloqueado</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Grande Mestre Mirim</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Completar com sucesso todas as 18 aberturas e os 4 livros da biblioteca.
+            </p>
+</div>
+<div class="mt-space-md p-space-xs rounded-lg bg-surface-container-low flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">star_half</span>
+<span class="font-label-badge text-label-badge text-on-surface-variant">Recompensa final de 100⭐</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. Special Rewards: Skins & Magical Studio Customizations -->
+<section class="mb-space-xl">
+<div class="bg-surface-card p-space-lg rounded-xl shadow-[0_4px_16px_rgba(181,138,101,0.08)]">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+<div>
+<div class="inline-flex items-center gap-1 text-mint-vibrant font-label-badge text-label-badge uppercase tracking-wider mb-1">
+<span class="material-symbols-outlined text-[15px]">palette</span>
+<span>Recompensas Visuais</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+              Skins &amp; Temas Mágicos do Tabuleiro
+            </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Personalize o seu estúdio com as estrelas mágicas que você ganhou praticando!
+            </p>
+</div>
+<div class="flex items-center gap-2 bg-amber-soft px-space-md py-space-xs rounded-full self-start md:self-auto shadow-sm">
+<span class="text-amber-vibrant text-lg">⭐</span>
+<span class="font-headline-sm text-headline-sm text-on-secondary-container">42 Estrelas Disponíveis</span>
+</div>
+</div>
+<!-- Skins Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Skin 1: Madeira Real (Equipado) -->
+<div class="bg-surface-warm p-space-md rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div>
+<div class="w-full h-32 rounded-lg bg-board-dark/20 p-2 flex items-center justify-center relative overflow-hidden mb-space-sm">
+<!-- Mini Board Preview -->
+<div class="w-24 h-24 grid grid-cols-3 grid-rows-3 rounded shadow-sm overflow-hidden">
+<div class="bg-board-light"></div><div class="bg-board-dark"></div><div class="bg-board-light"></div>
+<div class="bg-board-dark"></div><div class="bg-board-light"></div><div class="bg-board-dark"></div>
+<div class="bg-board-light"></div><div class="bg-board-dark"></div><div class="bg-board-light"></div>
+</div>
+<div class="absolute top-2 right-2 bg-primary text-on-primary font-label-badge text-label-badge px-2 py-0.5 rounded-full">
+                  Equipado
+                </div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Madeira Real Clássica</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                Visual acolhedor tradicional com tons de carvalho nobre.
+              </p>
+</div>
+<button class="mt-space-md w-full h-10 rounded-lg bg-surface-container text-primary font-label-md text-label-md cursor-default flex items-center justify-center gap-1.5 font-bold" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Em Uso</span>
+</button>
+</div>
+<!-- Skin 2: Floresta Encantada (Desbloqueado) -->
+<div class="bg-surface-warm p-space-md rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div>
+<div class="w-full h-32 rounded-lg bg-mint-soft p-2 flex items-center justify-center relative overflow-hidden mb-space-sm">
+<!-- Mini Board Preview -->
+<div class="w-24 h-24 grid grid-cols-3 grid-rows-3 rounded shadow-sm overflow-hidden">
+<div class="bg-mint-soft"></div><div class="bg-primary-container"></div><div class="bg-mint-soft"></div>
+<div class="bg-primary-container"></div><div class="bg-mint-soft"></div><div class="bg-primary-container"></div>
+<div class="bg-mint-soft"></div><div class="bg-primary-container"></div><div class="bg-mint-soft"></div>
+</div>
+<div class="absolute top-2 right-2 bg-mint-vibrant text-on-primary font-label-badge text-label-badge px-2 py-0.5 rounded-full">
+                  Liberado 🌿
+                </div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Floresta Encantada</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                Casas verdes suaves com folhas e aromas mágicos.
+              </p>
+</div>
+<button class="mt-space-md w-full h-10 rounded-lg bg-surface-card text-primary font-label-md text-label-md shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-all flex items-center justify-center gap-1.5 font-bold" type="button">
+<span>Equipar Este Tema</span>
+</button>
+</div>
+<!-- Skin 3: Peças de Cristal Mágico (Falta Pouco) -->
+<div class="bg-surface-warm p-space-md rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div>
+<div class="w-full h-32 rounded-lg bg-sky-soft p-2 flex items-center justify-center relative overflow-hidden mb-space-sm">
+<div class="w-24 h-24 flex items-center justify-center text-4xl">
+                  💎
+                </div>
+<div class="absolute top-2 right-2 bg-amber-soft text-on-secondary-container font-label-badge text-label-badge px-2 py-0.5 rounded-full font-bold">
+                  50 ⭐
+                </div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Peças de Cristal Mágico</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                Peças brilhantes translúcidas que reluzem a cada captura.
+              </p>
+</div>
+<div class="mt-space-md">
+<div class="flex justify-between font-label-badge text-label-badge text-on-surface-variant mb-1">
+<span>Faltam 8 estrelas</span>
+<span class="text-amber-vibrant font-bold">42 / 50 ⭐</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full rounded-full bg-amber-vibrant" style="width: 84%;"></div>
+</div>
+</div>
+</div>
+<!-- Skin 4: Voz do Robô Pipo (Desbloqueado) -->
+<div class="bg-surface-warm p-space-md rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div>
+<div class="w-full h-32 rounded-lg bg-surface-container p-2 flex items-center justify-center relative overflow-hidden mb-space-sm">
+<div class="w-24 h-24 flex items-center justify-center text-4xl">
+                  🤖🎙️
+                </div>
+<div class="absolute top-2 right-2 bg-tertiary text-on-tertiary font-label-badge text-label-badge px-2 py-0.5 rounded-full font-bold">
+                  Ativado
+                </div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Voz Divertida do Pipo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                Efeitos sonoros fofos de bip-bop a cada lance acertado.
+              </p>
+</div>
+<button class="mt-space-md w-full h-10 rounded-lg bg-surface-card text-tertiary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center justify-center gap-1.5 font-bold" type="button">
+<span class="material-symbols-outlined text-[18px]">volume_up</span>
+<span>Testar Som</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Mentors Encouraging Banner (Safe Emotional Growth Footer) -->
+<section class="mt-space-lg">
+<div class="bg-gradient-to-r from-mint-soft via-surface-card to-amber-soft p-space-lg rounded-xl shadow-[0_4px_20px_rgba(181,138,101,0.08)] flex flex-col md:flex-row items-center justify-between gap-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary-container flex items-center justify-center text-3xl shadow-md flex-shrink-0">
+            🦉
+          </div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">
+              "Você já percebeu o quanto aprendeu esta semana?"
+            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              Não se preocupe com lances perdidos; cada tentativa é um passinho para descobrir novas surpresas no tabuleiro!
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0 w-full md:w-auto">
+<a class="w-full md:w-auto h-12 px-space-lg rounded-xl bg-primary-container text-on-primary-container font-label-lg text-label-lg shadow-[0_6px_20px_rgba(22,134,94,0.2)] hover:bg-primary transition-all flex items-center justify-center gap-2" href="#">
+<span class="material-symbols-outlined text-[20px]">sports_esports</span>
+<span>Jogar Mais Um Desafio! ▶</span>
+</a>
+</div>
+</div>
+</section>
+</div>
+</div></main><footer class="w-full bg-surface-warm/80 py-space-lg mt-space-xl shadow-[0_-4px_16px_rgba(181,138,101,0.04)]"><div class="max-w-7xl mx-auto px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[16px]">auto_stories</span></div><span class="font-label-md text-label-md text-on-surface">Chess Mastery Kids • Estúdio Mágico de Aprendizagem</span></div><div class="flex items-center gap-space-md"><span class="font-body-sm text-body-sm text-on-surface-variant">Feito com carinho para pequenos mestres</span><div class="flex items-center gap-1 text-amber-vibrant"><span class="material-symbols-outlined text-[18px]">military_tech</span><span class="font-label-badge text-label-badge text-on-surface">Nível Peão Explorador</span></div></div></div></footer></body></html>
